@@ -1,0 +1,64 @@
+name: 构建扩展并发布 CRX
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install & Build
+        run: |
+          npm install
+          npm run build
+
+      - name: Extract Version
+        id: meta
+        run: |
+          VERSION=$(node -p "require('./dist/manifest.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "zip=nodeauth-v$VERSION.zip" >> $GITHUB_OUTPUT
+          echo "crx=nodeauth-v$VERSION.crx" >> $GITHUB_OUTPUT
+
+      - name: Pack Assets
+        env:
+          KEY: ${{ secrets.EXTENSION_PRIVATE_KEY }}
+        run: |
+          mkdir -p release
+          cd dist && zip -r "../release/${{ steps.meta.outputs.zip }}" . && cd ..
+          if [ -n "$KEY" ]; then
+            echo "$KEY" > ext.pem
+            npx --yes crx3 --keyPath ext.pem --crxPath "release/${{ steps.meta.outputs.crx }}" dist
+            rm ext.pem
+          fi
+
+      - name: Upload to Release
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="v${{ steps.meta.outputs.version }}"
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" --title "Release $TAG" --notes "Auto-generated release"
+          fi
+          gh release upload "$TAG" release/* --clobber
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nodeauth-v${{ steps.meta.outputs.version }}
+          path: release/
