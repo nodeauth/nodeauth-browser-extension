@@ -109,11 +109,19 @@
           </div>
 
           <div class="action-grid">
-            <button class="btn-outline" @click="copyToClipboard(exportData?.decryptedSecret, true)">
-              {{ $t('vault.copy_secret') }}
+            <button 
+              class="btn-outline" 
+              :class="{ 'btn-copied': activeCopyBtn === 'secret' }"
+              @click="handleExportCopy(exportData?.decryptedSecret, 'secret')"
+            >
+              {{ activeCopyBtn === 'secret' ? $t('vault.copied') + ' ✅' : $t('vault.copy_secret') }}
             </button>
-            <button class="btn-outline" @click="copyToClipboard(exportUri, true)">
-              {{ $t('vault.copy_uri') }}
+            <button 
+              class="btn-outline" 
+              :class="{ 'btn-copied': activeCopyBtn === 'uri' }"
+              @click="handleExportCopy(exportUri, 'uri')"
+            >
+              {{ activeCopyBtn === 'uri' ? $t('vault.copied') + ' ✅' : $t('vault.copy_uri') }}
             </button>
           </div>
         </div>
@@ -123,10 +131,13 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import VaultItem from './vaultItem.vue'
 import { useExtensionState } from '@/shared/state/useExtensionState'
 import { useVaultActions } from '@/features/vault/composables/useVaultActions'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const extensionState = useExtensionState()
 const { 
   vaultList, 
@@ -138,6 +149,7 @@ const {
   performSearch, 
   settings,
   copyToClipboard,
+  showToast,
   handleIncrement,
   incrementingIds
 } = extensionState
@@ -153,7 +165,26 @@ const {
   handleCommand,
   submitEditVault
 } = useVaultActions(extensionState)
+
+// 处理导出弹窗的双重反馈复制
+const activeCopyBtn = ref(null)
+function handleExportCopy(content, type) {
+  if (!content) return
+  
+  // 1. 执行复制
+  copyToClipboard(content, true)
+  
+  // 2. 触发全局 Toast
+  showToast(t('vault.copied'))
+  
+  // 3. 触发按钮状态切换
+  activeCopyBtn.value = type
+  setTimeout(() => {
+    if (activeCopyBtn.value === type) activeCopyBtn.value = null
+  }, 5000)
+}
 </script>
+
 
 <style scoped>
 .vault-view {
@@ -170,9 +201,9 @@ const {
   width: 100%;
   padding: 10px 12px 10px 36px;
   border-radius: 20px;
-  background-color: white;
-  border: 1px solid #eaeaea;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
   outline: none;
   font-size: 14px;
 }
@@ -197,23 +228,23 @@ const {
 }
 .category-item {
   padding: 6px 14px;
-  background-color: #f5f5f5;
-  border-radius: 16px;
+  background-color: var(--category-bg);
+  border-radius: var(--radius-lg);
   font-size: 12px;
-  color: #666;
+  color: var(--text-secondary);
   white-space: nowrap;
   cursor: pointer;
   transition: all 0.2s ease;
   border: 1px solid transparent;
 }
 .category-item:hover {
-  background-color: #efefef;
+  background-color: var(--category-hover);
 }
 .category-item.active {
-  background-color: #0f3460;
-  color: white;
+  background-color: var(--primary-color);
+  color: var(--text-white);
   font-weight: 500;
-  box-shadow: 0 4px 8px rgba(15, 52, 96, 0.2);
+  box-shadow: 0 4px 8px rgba(var(--primary-color-rgb), 0.2);
 }
 .count {
   font-size: 11px;
@@ -229,25 +260,24 @@ const {
   align-items: center;
   justify-content: center;
   flex: 1;
-  color: #666;
+  color: var(--text-secondary);
   font-size: 14px;
 }
 .spinner {
   width: 24px;
   height: 24px;
-  border: 3px solid rgba(15, 52, 96, 0.1);
-  border-top-color: #0f3460;
+  border: 3px solid rgba(var(--primary-color-rgb), 0.1);
+  border-top-color: var(--primary-color);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 12px;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
 .empty-state {
   display: flex;
   align-items: center;
   justify-content: center;
   flex: 1;
-  color: #999;
+  color: var(--text-light);
   font-size: 14px;
 }
 .vault-list {
@@ -259,8 +289,6 @@ const {
 .vault-list.compact {
   gap: 4px;
 }
-.fade-in { animation: fadeIn 0.3s ease; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
 /* 弹窗通用样式 */
 .modal-overlay {
@@ -275,20 +303,16 @@ const {
   padding: 20px;
 }
 .modal-content {
-  background: white;
-  border-radius: 16px;
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
   width: 100%;
   max-width: 320px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  box-shadow: var(--shadow-lg);
   animation: zoomIn 0.2s ease-out;
-}
-@keyframes zoomIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
 }
 .modal-header {
   padding: 16px 20px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-color-light);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -296,13 +320,13 @@ const {
 .modal-header h3 {
   margin: 0;
   font-size: 16px;
-  color: #333;
+  color: var(--text-main);
 }
 .close-btn {
   background: none;
   border: none;
   font-size: 24px;
-  color: #999;
+  color: var(--text-light);
   cursor: pointer;
   line-height: 1;
 }
@@ -321,57 +345,63 @@ const {
 .form-group label {
   display: block;
   font-size: 12px;
-  color: #666;
+  color: var(--text-secondary);
   margin-bottom: 6px;
 }
 .form-group input {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  border: 1px solid var(--border-color-dark);
+  border-radius: var(--radius-sm);
   font-size: 14px;
 }
 .modal-footer {
   padding: 16px 20px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--border-color-light);
   display: flex;
   gap: 12px;
 }
 .btn-primary, .btn-secondary {
   flex: 1;
   padding: 10px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   border: none;
 }
 .btn-primary {
-  background: #0f3460;
-  color: white;
+  background: var(--primary-color);
+  color: var(--text-white);
 }
 .btn-secondary {
-  background: #f5f5f5;
-  color: #666;
+  background: var(--category-bg);
+  color: var(--text-secondary);
 }
 .btn-outline {
   width: 100%;
   padding: 8px;
-  background: white;
-  border: 1px solid #eaeaea;
-  border-radius: 8px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
   font-size: 12px;
-  color: #444;
+  color: var(--text-secondary);
   cursor: pointer;
   margin-top: 8px;
+  transition: all 0.2s ease;
+}
+.btn-outline.btn-copied {
+  border-color: var(--success-color);
+  color: var(--success-color);
+  background: rgba(46, 204, 113, 0.08);
 }
 
 /* 导出弹窗特有 */
 .qr-container {
-  background: white;
+  background: var(--card-bg);
   padding: 12px;
   border-radius: 12px;
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--border-color-light);
   margin-bottom: 12px;
 }
 .qr-container img {
@@ -381,14 +411,14 @@ const {
 }
 .qr-tip {
   font-size: 12px;
-  color: #888;
+  color: var(--text-muted);
   margin-bottom: 20px;
 }
 .account-details {
   width: 100%;
   background: #f9f9f9;
   padding: 12px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   margin-bottom: 16px;
 }
 .detail-row {
@@ -397,11 +427,12 @@ const {
   font-size: 12px;
   margin-bottom: 4px;
 }
-.detail-row .label { color: #999; }
-.detail-row .value { color: #333; font-weight: 500; }
+.detail-row .label { color: var(--text-light); }
+.detail-row .value { color: var(--text-main); font-weight: 500; }
 .action-grid {
   width: 100%;
   display: flex;
   gap: 8px;
 }
 </style>
+

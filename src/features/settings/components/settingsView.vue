@@ -92,16 +92,16 @@ const fullVersion = `v${__APP_VERSION__} (${__GIT_HASH__})`
   padding-bottom: 24px;
 }
 .settings-section {
-  background: white;
-  border-radius: 10px;
+  background: var(--card-bg);
+  border-radius: var(--radius-md);
   padding: 16px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+  box-shadow: var(--shadow-sm);
 }
 h4 {
   margin-top: 0;
   margin-bottom: 12px;
   font-size: 12px;
-  color: #999;
+  color: var(--text-light);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -110,42 +110,42 @@ h4 {
   justify-content: space-between;
   align-items: center;
   padding: 10px 0;
-  border-bottom: 1px solid #f5f5f5;
+  border-bottom: 1px solid var(--category-bg);
 }
 .setting-item:last-child { border-bottom: none; }
-.setting-item span { font-size: 14px; color: #333; }
+.setting-item span { font-size: 14px; color: var(--text-main); }
 .setting-item select {
   padding: 4px 8px;
   border-radius: 4px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color-dark);
   font-size: 13px;
-  background: #fcfcfc;
+  background: var(--item-bg-hover);
 }
 .setting-item.readonly { flex-direction: column; align-items: flex-start; gap: 8px; }
 .setting-item code {
   font-family: monospace;
-  background: #f8f9fa;
+  background: var(--bg-color);
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 12px;
-  color: #d9534f;
+  color: var(--error-color);
   word-break: break-all;
   width: 100%;
 }
 .label-with-desc { display: flex; flex-direction: column; }
-.label-with-desc small { font-size: 11px; color: #999; margin-top: 2px; }
+.label-with-desc small { font-size: 11px; color: var(--text-light); margin-top: 2px; }
 .action-list { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
 .btn {
   width: 100%;
   padding: 12px;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
 }
-.btn-outline { background: transparent; border: 1px solid #ddd; color: #666; }
-.btn-danger { background: #d9534f; color: white; }
+.btn-outline { background: transparent; border: 1px solid var(--border-color-dark); color: var(--text-secondary); }
+.btn-danger { background: var(--error-color); color: white; }
 .settings-footer {
   text-align: center;
   margin-top: 12px;
@@ -153,6 +153,7 @@ h4 {
 }
 .settings-footer .version {
   font-size: 11px;
+  color: var(--text-muted);
   margin-bottom: 6px;
   font-family: monospace;
 }
@@ -161,10 +162,11 @@ h4 {
   justify-content: center;
   align-items: center;
   gap: 8px;
+  color: var(--text-light);
 }
 .settings-footer a {
   font-size: 12px;
-  color: #0f3460;
+  color: var(--primary-color);
   text-decoration: none;
   opacity: 0.8;
   transition: opacity 0.2s;
@@ -173,6 +175,5 @@ h4 {
   opacity: 1;
   text-decoration: underline;
 }
-.fade-in { animation: fadeIn 0.3s ease; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 </style>
+

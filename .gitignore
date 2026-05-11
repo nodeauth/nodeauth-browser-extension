@@ -38,6 +38,7 @@ dev-dist/
 .test/
 coverage/
 playwright-report/
+release/
 
 # 6. Agentic AI & Local Scripts
 .antigravity

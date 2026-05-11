@@ -1,7 +1,7 @@
 {
   "name": "nodeauth-browser-extension",
-  "version": "1.0.0",
-  "description": "NodeAuth 浏览器扩展程序 - 安全的 2FA/TOTP 辅助工具",
+  "version": "1.0.1",
+  "description": "NodeAuth Browser Extension - Secure 2FA/TOTP Assistant",
   "private": true,
   "type": "module",
   "scripts": {

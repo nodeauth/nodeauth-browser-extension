@@ -12,7 +12,8 @@ const settings = ref({
   density: 'standard',
   autolock: '0',
   clipboardClear: 'clear_never',
-  language: getDefaultLanguage()
+  language: getDefaultLanguage(),
+  showServiceIcons: false
 })
 
 // 监听设置变化同步到 Storage 和 Background
@@ -27,7 +28,7 @@ watch(settings, async (newVal) => {
   setLanguage(newVal.language)
   try {
     rpc.updateLockTimer()
-  } catch (e) {}
+  } catch (e) { }
 }, { deep: true })
 
 async function loadSettings() {
@@ -36,6 +37,7 @@ async function loadSettings() {
     'sys:ui:autolock',
     'sys:ui:clipboard',
     'sys:ui:locale',
+    'sys:ui:show_icons',
     'sys:state:instance_url'
   ])
   settings.value = {
@@ -43,7 +45,7 @@ async function loadSettings() {
     autolock: data['sys:ui:autolock'] || '0',
     clipboardClear: data['sys:ui:clipboard'] || 'clear_never',
     language: data['sys:ui:locale'] || getDefaultLanguage(),
-    showServiceIcons: data['sys:ui:show_icons'] || false
+    showServiceIcons: data['sys:ui:show_icons'] !== undefined ? data['sys:ui:show_icons'] : false
   }
   instanceUrl.value = data['sys:state:instance_url'] || ''
 }
@@ -60,13 +62,13 @@ async function startPairing() {
     const granted = await chrome.permissions.request({
       origins: [`${origin}/*`]
     })
-    
+
     if (!granted) {
       throw new Error('User denied permissions')
     }
 
     await chrome.storage.local.set({ 'sys:state:instance_url': url })
-    
+
     // 主动通知 Background 立即精准注入桥接脚本，修复时序漏洞
     await rpc.registerContentScript(url)
 

@@ -24,9 +24,9 @@ const { appState, isAddModalOpen, lockVault } = useExtensionState()
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  background-color: #0f3460;
-  color: white;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background-color: var(--primary-color);
+  color: var(--text-white);
+  box-shadow: var(--shadow-sm);
   z-index: 10;
 }
 .logo-text {
@@ -41,16 +41,17 @@ const { appState, isAddModalOpen, lockVault } = useExtensionState()
 .icon-btn {
   background: transparent;
   border: none;
-  color: rgba(255,255,255,0.8);
+  color: rgba(255, 255, 255, 0.8);
   cursor: pointer;
   padding: 4px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   transition: all 0.2s;
   display: flex;
   align-items: center;
 }
 .icon-btn:hover {
-  background: rgba(255,255,255,0.1);
-  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-white);
 }
 </style>
+

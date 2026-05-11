@@ -32,19 +32,10 @@ jobs:
           VERSION=$(node -p "require('./dist/manifest.json').version")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "zip=nodeauth-v$VERSION.zip" >> $GITHUB_OUTPUT
-          echo "crx=nodeauth-v$VERSION.crx" >> $GITHUB_OUTPUT
-
       - name: Pack Assets
-        env:
-          KEY: ${{ secrets.EXTENSION_PRIVATE_KEY }}
         run: |
           mkdir -p release
           cd dist && zip -r "../release/${{ steps.meta.outputs.zip }}" . && cd ..
-          if [ -n "$KEY" ]; then
-            echo "$KEY" > ext.pem
-            npx --yes crx3 --keyPath ext.pem --crxPath "release/${{ steps.meta.outputs.crx }}" dist
-            rm ext.pem
-          fi
 
       - name: Upload to Release
         if: github.ref == 'refs/heads/main'

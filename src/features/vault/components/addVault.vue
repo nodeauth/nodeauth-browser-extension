@@ -18,7 +18,7 @@
           <input v-model="form.account" type="text" :placeholder="$t('vault.account_placeholder')" />
         </div>
         <div class="form-group">
-          <label>{{ $t('vault.secret_placeholder') }}</label>
+          <label>{{ $t('vault.secret_label') }}</label>
           <input v-model="form.secret" type="password" :placeholder="$t('vault.secret_placeholder')" />
         </div>
         <div class="form-group">
@@ -87,20 +87,16 @@ async function handleSave() {
   padding: 20px;
 }
 .modal-content {
-  background: white;
-  border-radius: 16px;
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
   width: 100%;
   max-width: 320px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  box-shadow: var(--shadow-lg);
   animation: zoomIn 0.2s ease-out;
-}
-@keyframes zoomIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
 }
 .modal-header {
   padding: 16px 20px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-color-light);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -108,13 +104,13 @@ async function handleSave() {
 .modal-header h3 {
   margin: 0;
   font-size: 16px;
-  color: #333;
+  color: var(--text-main);
 }
 .close-btn {
   background: none;
   border: none;
   font-size: 24px;
-  color: #999;
+  color: var(--text-light);
   cursor: pointer;
   line-height: 1;
 }
@@ -123,7 +119,7 @@ async function handleSave() {
 }
 .modal-desc {
   font-size: 12px;
-  color: #888;
+  color: var(--text-muted);
   margin-bottom: 16px;
   text-align: center;
 }
@@ -133,41 +129,43 @@ async function handleSave() {
 .form-group label {
   display: block;
   font-size: 12px;
-  color: #666;
+  color: var(--text-secondary);
   margin-bottom: 6px;
 }
 .form-group input {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  border: 1px solid var(--border-color-dark);
+  border-radius: var(--radius-sm);
   font-size: 14px;
 }
 .modal-footer {
   padding: 16px 20px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--border-color-light);
   display: flex;
   gap: 12px;
 }
 .btn-primary, .btn-secondary {
   flex: 1;
   padding: 10px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   border: none;
 }
 .btn-primary {
-  background: #0f3460;
-  color: white;
+  background: var(--primary-color);
+  color: var(--text-white);
 }
 .btn-primary:disabled {
-  background: #ccc;
+  background: var(--border-color-dark);
   cursor: not-allowed;
+  opacity: 0.7;
 }
 .btn-secondary {
-  background: #f5f5f5;
-  color: #666;
+  background: var(--category-bg);
+  color: var(--text-secondary);
 }
 </style>
+

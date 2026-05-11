@@ -166,25 +166,24 @@ function progressOffset(percentage) {
 
 <style scoped>
 .vault-item {
-  background: white;
-  border-radius: 10px;
+  background: var(--card-bg);
+  border-radius: var(--radius-md);
   padding: 12px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
   position: relative;
-  /* 移除 overflow: hidden 以允许菜单悬浮显示 */
   transition: transform 0.1s, box-shadow 0.1s;
 }
 .vault-item:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+  box-shadow: var(--shadow-md);
 }
 .vault-item:active {
   transform: translateY(1px);
-  background: #fcfcfc;
+  background: var(--item-bg-hover);
 }
 .item-left {
   display: flex;
@@ -201,14 +200,14 @@ function progressOffset(percentage) {
 .service-name {
   font-weight: 600;
   font-size: 14px;
-  color: #333;
+  color: var(--text-main);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .account-name {
   font-size: 11px;
-  color: #888;
+  color: var(--text-muted);
   margin-top: 1px;
   white-space: nowrap;
   overflow: hidden;
@@ -223,7 +222,7 @@ function progressOffset(percentage) {
 .totp-code {
   font-size: 19px;
   font-weight: 700;
-  color: #0f3460;
+  color: var(--primary-color);
   letter-spacing: 0.5px;
   font-variant-numeric: tabular-nums;
   margin-right: 8px;
@@ -247,10 +246,10 @@ function progressOffset(percentage) {
   position: absolute;
   font-size: 10px;
   font-weight: 700;
-  color: #0f3460;
+  color: var(--primary-color);
 }
 .progress-text.text-warning {
-  color: #d9534f;
+  color: var(--error-color);
 }
 
 /* 操作按钮与菜单 */
@@ -262,7 +261,7 @@ function progressOffset(percentage) {
   background: none;
   border: none;
   padding: 4px;
-  color: #999;
+  color: var(--text-light);
   cursor: pointer;
   border-radius: 4px;
   display: flex;
@@ -271,32 +270,28 @@ function progressOffset(percentage) {
   transition: all 0.2s;
 }
 .action-btn:hover {
-  background: #f0f0f0;
-  color: #0f3460;
+  background: var(--category-bg);
+  color: var(--primary-color);
 }
 .action-menu {
   position: fixed;
   z-index: 10000;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  background: var(--card-bg);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
   padding: 4px;
   width: 120px;
   display: flex;
   flex-direction: column;
   gap: 2px;
-  border: 1px solid #eee;
+  border: 1px solid var(--border-color-light);
   transform-origin: top right;
   animation: menuIn 0.2s ease;
-}
-@keyframes slideIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 .menu-item {
   padding: 9px 14px;
   font-size: 13px;
-  color: #444;
+  color: var(--text-secondary);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -304,13 +299,13 @@ function progressOffset(percentage) {
   transition: background 0.15s;
 }
 .menu-item:hover {
-  background: #f5f7fa;
+  background: var(--category-bg);
 }
 .menu-item.delete {
-  color: #ff4d4f;
+  color: var(--error-color);
 }
 .menu-item.delete:hover {
-  background: #fff1f0;
+  background: var(--error-bg);
 }
 
 /* HOTP 计数器刷新按钮 */
@@ -340,34 +335,43 @@ function progressOffset(percentage) {
 .hotp-btn--loading svg {
   animation: spin 0.8s linear infinite;
 }
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
 
 .copy-toast {
   position: absolute;
-  top: -2px; left: -120px; right: -30px; bottom: -2px;
-  background: rgba(15, 52, 96, 0.92);
-  color: white;
+  /* 精准覆盖右侧验证码及操作区域 */
+  top: 0; left: -15px; right: -8px; bottom: 0; 
+  
+  /* 核心：磨砂玻璃效果 */
+  background: rgba(var(--primary-color-rgb), 0.88);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  
+  color: var(--text-white);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
   font-size: 13px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
+  
+  /* 初始状态：透明并轻微缩小 */
   opacity: 0;
+  transform: scale(0.92);
   pointer-events: none;
-  transition: opacity 0.2s;
+  
+  /* 弹性动画曲线 */
+  transition: opacity 0.2s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 5;
 }
 .copy-toast.show {
   opacity: 1;
+  transform: scale(1);
 }
 
 /* 紧凑模式 */
 .vault-item.compact {
   padding: 6px 12px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 }
 .vault-item.compact :deep(.service-icon-wrapper) {
   width: 20px;
