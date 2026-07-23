@@ -3,6 +3,7 @@ import { render, screen, fireEvent, cleanup } from '@testing-library/vue'
 import VaultList from '@/features/vault/components/vaultList.vue'
 import VaultItem from '@/features/vault/components/vaultItem.vue'
 import { ref, nextTick } from 'vue'
+import { createI18n } from 'vue-i18n'
 
 // --- 全量 Mock 业务状态 ---
 const sharedSettings = ref({ density: 'standard', ghostMode: false })
@@ -31,6 +32,12 @@ vi.mock('@/shared/state/useExtensionState', () => ({
 }))
 
 describe('Advanced UI & Interaction (features/vaultFlow.test.js)', () => {
+  const i18n = createI18n({
+    legacy: false,
+    locale: 'en',
+    messages: { en: {} }
+  })
+
   beforeEach(() => {
     cleanup()
     vi.useFakeTimers()
@@ -53,17 +60,17 @@ describe('Advanced UI & Interaction (features/vaultFlow.test.js)', () => {
     sharedSettings.value.ghostMode = true
     const { container } = render(VaultItem, {
       props: { item: sharedVaultList.value[0] },
-      global: { mocks: { $t: k => k } }
+      global: { plugins: [i18n], mocks: { $t: k => k } }
     })
     
     // 检查是否包含隐私遮罩类名
-    expect(container.querySelector('.privacy-mask')).toBeTruthy()
+    expect(container.querySelector('.ghost-blur')).toBeTruthy()
   })
 
   // [HP] 验证搜索过滤与空状态 (Empty State)
   it('HP & EC: should handle search filtering and empty state', async () => {
     const { rerender } = render(VaultList, {
-      global: { mocks: { $t: k => k } }
+      global: { plugins: [i18n], mocks: { $t: k => k } }
     })
 
     // 初始状态应有两个项目
@@ -110,7 +117,7 @@ describe('Advanced UI & Interaction (features/vaultFlow.test.js)', () => {
   // [HP] 验证分类切换
   it('HP: should toggle category filter and highlight active tag', async () => {
     const { container } = render(VaultList, {
-      global: { mocks: { $t: k => k } }
+      global: { plugins: [i18n], mocks: { $t: k => k } }
     })
     
     const items = container.querySelectorAll('.category-item')

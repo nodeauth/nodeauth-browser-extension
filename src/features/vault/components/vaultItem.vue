@@ -1,7 +1,7 @@
 <template>
   <div 
     class="vault-item"
-    :class="[settings.density]"
+    :class="[settings.density, { 'ghost-blur': settings.ghostMode }]"
     :style="{ position: 'relative' }"
     role="listitem"
     @click="handleCopyCode"

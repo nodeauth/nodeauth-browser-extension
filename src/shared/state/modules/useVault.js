@@ -14,7 +14,7 @@ const isLoadingVault = ref(false)
 let timerInterval = null
 
 export function useVault() {
-  const { lockVault, appState, getMemoryMaskingKey } = useAuth()
+  const { lockVault, appState, getMemoryMaskingKey, getAllMemoryMaskingKeys } = useAuth()
   const { instanceUrl } = useSettings()
   const { isAddModalOpen, isAddingAccount } = useUI()
 
@@ -55,8 +55,8 @@ export function useVault() {
   // 加载金库数据
   async function loadVault() {
     if (!instanceUrl.value) return
-    const maskingKey = getMemoryMaskingKey()
-    if (!maskingKey) {
+    const maskingKeys = getAllMemoryMaskingKeys()
+    if (!maskingKeys || maskingKeys.length === 0) {
       console.warn('[Vault] No masking key found, skipping load.')
       await lockVault()
       return
@@ -69,7 +69,7 @@ export function useVault() {
       for (const item of rawList) {
         if (item.secret) {
           try {
-            item.decryptedSecret = await unmaskSecret(item.secret, maskingKey)
+            item.decryptedSecret = await unmaskSecret(item.secret, maskingKeys)
             decryptedList.push(item)
           } catch (e) {
             console.error(`[Vault] Decrypt failed for ${item.service}:`, e)

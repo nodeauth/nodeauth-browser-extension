@@ -1,8 +1,9 @@
-name: 构建扩展并发布 CRX
+name: 构建扩展并发布 Release
 
 on:
   push:
-    branches: [main]
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 permissions:
@@ -14,42 +15,45 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: 安装 Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
           cache-dependency-path: package-lock.json
 
-      - name: Install & Build
-        run: |
-          npm install
-          npm run build
-
-      - name: Extract Version
+      - name: 从 package.json 读取版本号
         id: meta
         run: |
-          VERSION=$(node -p "require('./dist/manifest.json').version")
+          VERSION=$(node -p "require('./package.json').version")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "zip=nodeauth-v$VERSION.zip" >> $GITHUB_OUTPUT
-      - name: Pack Assets
-        run: |
-          mkdir -p release
-          cd dist && zip -r "../release/${{ steps.meta.outputs.zip }}" . && cd ..
+          echo "📦 构建版本：v$VERSION"
 
-      - name: Upload to Release
-        if: github.ref == 'refs/heads/main'
+      - name: 安装依赖
+        run: npm install
+
+      - name: 一键构建所有平台产物
+        run: npm run build:all
+
+      - name: 上传到 GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="v${{ steps.meta.outputs.version }}"
-          if ! gh release view "$TAG" >/dev/null 2>&1; then
-            gh release create "$TAG" --title "Release $TAG" --notes "Auto-generated release"
+          if ! gh release view "$TAG" > /dev/null 2>&1; then
+            gh release create "$TAG" \
+              --title "Release $TAG" \
+              --notes "## NodeAuth 浏览器扩展 $TAG
+
+          ### 📦 发布产物
+          - \`nodeauth-extension-$TAG-chrome.zip\` - Chrome / Edge 版本
+          - \`nodeauth-extension-$TAG-firefox.zip\` - Firefox 版本
+          - \`nodeauth-source-$TAG.zip\` - Mozilla 审核用源码包"
           fi
           gh release upload "$TAG" release/* --clobber
 
-      - name: Upload Artifacts
+      - name: 上传构建产物（Artifacts）
         uses: actions/upload-artifact@v4
         with:
-          name: nodeauth-v${{ steps.meta.outputs.version }}
+          name: nodeauth-extension-v${{ steps.meta.outputs.version }}
           path: release/

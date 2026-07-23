@@ -43,4 +43,18 @@ describe('Crypto Utilities (unit/crypto.test.js)', () => {
     const unmasked = await unmaskSecret(masked, maskingKeyBuffer)
     expect(unmasked).toBe(secret)
   })
+
+  // [新增] 验证使用密钥数组进行降级遍历解密
+  it('HP: should unmask secrets correctly with multiple masking keys array', async () => {
+    const secret = 'JBSWY3DPEHPK3PXP'
+    const key1 = await deriveMaskingKey('device-salt-1')
+    const key2 = await deriveMaskingKey('device-salt-2')
+    
+    // 使用第二个密钥加密
+    const masked = await maskSecret(secret, key2)
+    
+    // 使用包含两个密钥的数组解密，应当自动 fallback 找到能解密的 key2
+    const unmasked = await unmaskSecret(masked, [key1, key2])
+    expect(unmasked).toBe(secret)
+  })
 })

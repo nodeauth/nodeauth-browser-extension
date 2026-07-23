@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import VaultList from '@/features/vault/components/vaultList.vue'
 import { ref, computed } from 'vue'
+import { createI18n } from 'vue-i18n'
 
 // Mock useExtensionState
 const mockState = {
@@ -47,8 +48,20 @@ vi.mock('@/features/vault/components/vaultItem.vue', () => ({
 }))
 
 describe('VaultList.vue Component', () => {
+  const i18n = createI18n({
+    legacy: false,
+    locale: 'en',
+    messages: {
+      en: {
+        vault: { empty: 'vault.empty' },
+        common: {}
+      }
+    }
+  })
+
   const globalConfig = {
     global: {
+      plugins: [i18n],
       mocks: {
         $t: (msg) => msg
       }

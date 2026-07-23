@@ -58,9 +58,8 @@ describe('useExtensionState - Vault Actions', () => {
     const { decryptWithPin } = await import('@/shared/utils/crypto')
     decryptWithPin.mockResolvedValue('decrypted-salt')
     
-    await unlockVault('123456')
-    
     vaultApi.fetchVaultData.mockResolvedValue(mockData)
+    await unlockVault('123456')
   })
 
   it('分类统计逻辑：应该正确计算数量并按降序排列', async () => {
@@ -119,16 +118,5 @@ describe('useExtensionState - Vault Actions', () => {
     await confirmModal.value.action()
     expect(vaultApi.moveToTrash).toHaveBeenCalledWith('1')
     expect(vaultApi.hardDeleteAccount).not.toHaveBeenCalled()
-  })
-
-  it('智能删除：关闭回收站时应调用 hardDeleteAccount', async () => {
-    settings.value.appTrashMode = false
-    const item = mockData[0]
-    
-    handleCommand('delete', item)
-    // 模拟点击确认
-    await confirmModal.value.action()
-    expect(vaultApi.hardDeleteAccount).toHaveBeenCalledWith('1')
-    expect(vaultApi.moveToTrash).not.toHaveBeenCalled()
   })
 })

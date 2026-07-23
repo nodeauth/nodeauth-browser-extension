@@ -7,7 +7,7 @@ import { useVault } from './useVault'
 
 const appState = ref('loading') // 'loading' | 'uninitialized' | 'ready_to_lock' | 'locked' | 'unlocked'
 let memoryDeviceSalt = null
-let memoryMaskingKey = null
+let memoryMaskingKeys = null
 
 let failureCount = 0
 let lastFailureTime = 0
@@ -37,7 +37,8 @@ export function useAuth() {
       const bgResponse = await rpc.getVaultKey()
       if (bgResponse && bgResponse.salt && hasToken) {
         memoryDeviceSalt = bgResponse.salt
-        memoryMaskingKey = await deriveMaskingKey(memoryDeviceSalt)
+        const salts = memoryDeviceSalt.split(',')
+        memoryMaskingKeys = await Promise.all(salts.map(s => deriveMaskingKey(s.trim())))
         appState.value = 'unlocked'
         
         // 延迟调用 useVault() 以规避循环依赖
@@ -116,7 +117,8 @@ export function useAuth() {
     try {
       const decryptedSalt = await decryptWithPin(encSaltBase64, pin)
       memoryDeviceSalt = decryptedSalt
-      memoryMaskingKey = await deriveMaskingKey(memoryDeviceSalt)
+      const salts = memoryDeviceSalt.split(',')
+      memoryMaskingKeys = await Promise.all(salts.map(s => deriveMaskingKey(s.trim())))
       
       failureCount = 0 // 解锁成功，重置计数
       await rpc.setVaultKey(decryptedSalt)
@@ -134,7 +136,7 @@ export function useAuth() {
   // 锁定
   async function lockVault() {
     memoryDeviceSalt = null
-    memoryMaskingKey = null
+    memoryMaskingKeys = null
     appState.value = 'locked'
     
     const vault = useVault()
@@ -195,7 +197,8 @@ export function useAuth() {
     lockVault,
     triggerSignOut,
     triggerReset,
-    getMemoryMaskingKey: () => memoryMaskingKey,
-    memoryMaskingKey: computed(() => memoryMaskingKey)
+    getMemoryMaskingKey: () => memoryMaskingKeys ? memoryMaskingKeys[0] : null,
+    getAllMemoryMaskingKeys: () => memoryMaskingKeys,
+    memoryMaskingKeys: computed(() => memoryMaskingKeys)
   }
 }

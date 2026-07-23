@@ -117,9 +117,9 @@ export async function deriveMaskingKey(deviceSaltStr) {
 /**
  * PWA 兼容：解密 nodeauth 掩码数据
  * @param {string} maskedData "nodeauth:base64..."
- * @param {ArrayBuffer} maskingKeyBuffer
+ * @param {ArrayBuffer | ArrayBuffer[]} maskingKeyBufferOrArray
  */
-export async function unmaskSecret(maskedData, maskingKeyBuffer) {
+export async function unmaskSecret(maskedData, maskingKeyBufferOrArray) {
     if (!maskedData || !maskedData.startsWith('nodeauth:')) {
         return maskedData;
     }
@@ -133,21 +133,32 @@ export async function unmaskSecret(maskedData, maskingKeyBuffer) {
     const iv = combined.slice(0, 12);
     const ciphertext = combined.slice(12);
 
-    const keyUsage = await crypto.subtle.importKey(
-        'raw',
-        maskingKeyBuffer,
-        'AES-GCM',
-        false,
-        ['decrypt']
-    );
+    const keys = Array.isArray(maskingKeyBufferOrArray) ? maskingKeyBufferOrArray : [maskingKeyBufferOrArray];
+    let lastError;
 
-    const decryptedBuffer = await crypto.subtle.decrypt(
-        { name: 'AES-GCM', iv },
-        keyUsage,
-        ciphertext
-    );
+    for (const maskingKeyBuffer of keys) {
+        try {
+            const keyUsage = await crypto.subtle.importKey(
+                'raw',
+                maskingKeyBuffer,
+                'AES-GCM',
+                false,
+                ['decrypt']
+            );
 
-    return new TextDecoder().decode(decryptedBuffer);
+            const decryptedBuffer = await crypto.subtle.decrypt(
+                { name: 'AES-GCM', iv },
+                keyUsage,
+                ciphertext
+            );
+
+            return new TextDecoder().decode(decryptedBuffer);
+        } catch (e) {
+            lastError = e;
+        }
+    }
+
+    throw lastError || new Error('Decryption failed with all provided keys');
 }
 
 /**
