@@ -1,6 +1,6 @@
 {
   "name": "nodeauth-browser-extension",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "NodeAuth Browser Extension - Secure 2FA/TOTP Assistant",
   "private": true,
   "type": "module",

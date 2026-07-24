@@ -88,6 +88,12 @@ export function useVault() {
     } catch (e) {
       console.error('[Vault] loadVault error:', e)
       if (e.message === 'AUTH_EXPIRED') {
+        // 清理持久化凭证，防止陷入重启后依然提示输入密码的僵尸状态
+        await chrome.storage.local.remove([
+          'sys:auth:extension_token', 
+          'sys:state:status',
+          'sys:sec:enc_device_salt'
+        ])
         await lockVault()
         appState.value = 'uninitialized'
       }
