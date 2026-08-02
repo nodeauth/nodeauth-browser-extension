@@ -12,7 +12,15 @@
     </div>
 
     <!-- 分类筛选 -->
-    <div class="category-bar" v-if="categories.length > 0">
+    <div class="category-bar" v-if="(categories?.length || 0) > 0 || (currentSiteAccounts?.length || 0) > 0">
+      <div 
+        v-if="(currentSiteAccounts?.length || 0) > 0"
+        class="category-item current-site-tag"
+        :class="{ active: selectedCategory === 'current_site' }"
+        @click="selectedCategory = 'current_site'"
+      >
+        💡 {{ $t('vault.current_site') }} <span class="count">({{ currentSiteAccounts?.length || 0 }})</span>
+      </div>
       <div 
         class="category-item" 
         :class="{ active: selectedCategory === '' }"
@@ -144,6 +152,7 @@ const {
   categories, 
   selectedCategory, 
   totalItemsCount,
+  currentSiteAccounts = ref([]),
   isLoadingVault, 
   searchQuery, 
   performSearch, 
@@ -245,6 +254,9 @@ function handleExportCopy(content, type) {
   color: var(--text-white);
   font-weight: 500;
   box-shadow: 0 4px 8px rgba(var(--primary-color-rgb), 0.2);
+}
+.category-item.current-site-tag {
+  font-weight: 500;
 }
 .count {
   font-size: 11px;

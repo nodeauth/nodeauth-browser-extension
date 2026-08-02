@@ -13,7 +13,8 @@ const settings = ref({
   autolock: '0',
   clipboardClear: 'clear_never',
   language: getDefaultLanguage(),
-  showServiceIcons: false
+  showServiceIcons: false,
+  appShowBadge: true
 })
 
 // 监听设置变化同步到 Storage 和 Background
@@ -23,11 +24,14 @@ watch(settings, async (newVal) => {
     'sys:ui:autolock': newVal.autolock,
     'sys:ui:clipboard': newVal.clipboardClear,
     'sys:ui:locale': newVal.language,
-    'sys:ui:show_icons': newVal.showServiceIcons
+    'sys:ui:show_icons': newVal.showServiceIcons,
+    'sys:ui:show_badge': newVal.appShowBadge,
+    'sys:ui:settings': { appShowBadge: newVal.appShowBadge }
   })
   setLanguage(newVal.language)
   try {
     rpc.updateLockTimer()
+    rpc.refreshBadge()
   } catch (e) { }
 }, { deep: true })
 
@@ -38,6 +42,7 @@ async function loadSettings() {
     'sys:ui:clipboard',
     'sys:ui:locale',
     'sys:ui:show_icons',
+    'sys:ui:show_badge',
     'sys:state:instance_url'
   ])
   settings.value = {
@@ -45,7 +50,8 @@ async function loadSettings() {
     autolock: data['sys:ui:autolock'] || '0',
     clipboardClear: data['sys:ui:clipboard'] || 'clear_never',
     language: data['sys:ui:locale'] || getDefaultLanguage(),
-    showServiceIcons: data['sys:ui:show_icons'] !== undefined ? data['sys:ui:show_icons'] : false
+    showServiceIcons: data['sys:ui:show_icons'] !== undefined ? data['sys:ui:show_icons'] : false,
+    appShowBadge: data['sys:ui:show_badge'] !== undefined ? data['sys:ui:show_badge'] : true
   }
   instanceUrl.value = data['sys:state:instance_url'] || ''
 }

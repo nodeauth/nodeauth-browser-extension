@@ -26,6 +26,16 @@
           <option :value="false">{{ $t('common.off') }}</option>
         </select>
       </div>
+      <div class="setting-item">
+        <div class="label-with-desc">
+          <span>{{ $t('settings.show_badge') }}</span>
+          <small>{{ $t('settings.show_badge_desc') }}</small>
+        </div>
+        <select v-model="settings.appShowBadge">
+          <option :value="true">{{ $t('common.on') }}</option>
+          <option :value="false">{{ $t('common.off') }}</option>
+        </select>
+      </div>
     </div>
 
     <div class="settings-section">

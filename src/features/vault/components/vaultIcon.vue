@@ -48,37 +48,16 @@ const handleLoad = (e) => {
   clearTimeout(raceTimeout.value)
 }
 
+import { extractDomainFromService } from '@/shared/utils/domainMatcher'
+
 const handleError = () => {
   hasError.value = true
   isLoading.value = false
   clearTimeout(raceTimeout.value)
 }
 
-const SERVICE_DOMAIN_MAP = {
-  'google': 'google.com',
-  'github': 'github.com',
-  'microsoft': 'microsoft.com',
-  'apple': 'apple.com',
-  'amazon': 'amazon.com',
-  'facebook': 'facebook.com',
-  'twitter': 'twitter.com',
-  'discord': 'discord.com',
-  'slack': 'slack.com',
-  'telegram': 'telegram.org',
-  'dropbox': 'dropbox.com',
-  'cloudflare': 'cloudflare.com',
-  'gitlab': 'gitlab.com',
-  'bitbucket': 'bitbucket.org',
-  'steam': 'steampowered.com',
-  'battle': 'battle.net',
-  'blizzard': 'battle.net'
-}
-
 const domainName = computed(() => {
-  if (!props.service) return ''
-  const s = props.service.toLowerCase().trim()
-  if (s.includes('.')) return s
-  return SERVICE_DOMAIN_MAP[s] || `${s}.com`
+  return extractDomainFromService(props.service)
 })
 
 const firstLetter = computed(() => {

@@ -40,6 +40,7 @@
   },
   "vault": {
     "search_placeholder": "搜索账号...",
+    "current_site": "当前网站",
     "loading": "正在拉取...",
     "empty": "暂无账号数据",
     "no_match": "未找到匹配的账号",
@@ -111,6 +112,8 @@
     "language": "界面语言",
     "show_service_icons": "服务图标",
     "show_service_icons_desc": "开启后将从公共服务获取图标。注意：这会将您的账户域名发送给第三方。",
+    "show_badge": "建议数量角标",
+    "show_badge_desc": "在扩展图标上显示匹配当前网站建议的账号数量",
     "security": "安全设置",
     "auto_lock": "自动锁定延迟",
     "lock_immediately": "立即锁定",

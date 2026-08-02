@@ -101,12 +101,84 @@ async function decryptPayload(sharedKey, ciphertextBase64, ivBase64) {
 }
 
 import { RPC_TYPES } from '@/shared/utils/rpc'
+import { isServiceMatchDomain } from '@/shared/utils/domainMatcher'
+
+/**
+ * 刷新当前激活 Tab 的自动填充推荐角标 (Badge)
+ */
+export async function updateBadgeForActiveTab() {
+  try {
+    // 1. 读取用户设置 appShowBadge (默认 true)
+    const settingsRes = await chrome.storage.local.get(['sys:ui:settings', 'sys:ui:show_badge'])
+    const settings = settingsRes['sys:ui:settings'] || {}
+    const directShowBadge = settingsRes['sys:ui:show_badge']
+    const showBadge = directShowBadge !== undefined ? directShowBadge : (settings.appShowBadge !== false)
+
+    if (!showBadge) {
+      chrome?.action?.setBadgeText?.({ text: '' })
+      return
+    }
+
+    // 2. 检查当前是否处于解锁状态并读取 Session 账号摘要
+    if (!chrome?.storage?.session?.get) {
+      chrome?.action?.setBadgeText?.({ text: '' })
+      return
+    }
+    const sessionRes = await chrome.storage.session.get(['sys:sec:active_salt', 'sys:sec:vault_summary'])
+    const salt = sessionRes?.['sys:sec:active_salt']
+    const vaultSummary = sessionRes?.['sys:sec:vault_summary'] || []
+
+    if (!salt || !vaultSummary.length) {
+      chrome.action.setBadgeText({ text: '' })
+      return
+    }
+
+    // 3. 获取当前激活标签页 URL
+    const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true })
+    if (!activeTab || !activeTab.url) {
+      chrome.action.setBadgeText({ text: '' })
+      return
+    }
+
+    // 4. 使用三级递进匹配算法计算当前页面推荐的账号数 (严格仅匹配 service 服务名)
+    let count = 0
+    for (const item of vaultSummary) {
+      if (item.service && isServiceMatchDomain(item.service, activeTab.url)) {
+        count++
+      }
+    }
+
+    if (count > 0) {
+      const badgeText = count > 9 ? '9+' : String(count)
+      chrome.action.setBadgeText({ text: badgeText })
+      chrome.action.setBadgeBackgroundColor({ color: '#2563eb' })
+    } else {
+      chrome.action.setBadgeText({ text: '' })
+    }
+  } catch (e) {
+    console.warn('[Background] Update badge failed:', e)
+    chrome.action.setBadgeText({ text: '' })
+  }
+}
+
+// 监听标签页切换与网页 URL 变化
+chrome.tabs.onActivated.addListener(() => updateBadgeForActiveTab())
+chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+  if (changeInfo.status === 'complete' || changeInfo.url) {
+    updateBadgeForActiveTab()
+  }
+})
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === RPC_TYPES.CAPTURE_ACTIVE_TAB) {
     chrome.tabs.captureVisibleTab(null, { format: 'png' })
       .then(dataUrl => sendResponse({ success: true, dataUrl }))
       .catch(err => sendResponse({ success: false, error: err.message }))
+    return true
+  }
+
+  if (message.type === RPC_TYPES.REFRESH_BADGE) {
+    updateBadgeForActiveTab().then(() => sendResponse({ success: true }))
     return true
   }
 
@@ -162,6 +234,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // Popup 验证 PIN 成功后，将 Salt 托管给 Background (Session)
     chrome.storage.session.set({ 'sys:sec:active_salt': message.salt }).then(() => {
       restartAutoLockTimer()
+      updateBadgeForActiveTab()
       sendResponse({ success: true })
     })
     return true
@@ -170,6 +243,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'LOCK_VAULT') {
     // 立即锁定
     clearLockState().then(() => {
+      chrome.action.setBadgeText({ text: '' })
       sendResponse({ success: true })
     })
     return true
@@ -230,9 +304,10 @@ async function restartAutoLockTimer() {
 }
 
 async function clearLockState() {
-  await chrome.storage.session.remove('sys:sec:active_salt')
+  await chrome.storage.session.remove(['sys:sec:active_salt', 'sys:sec:vault_summary'])
   await chrome.alarms.clear('autoLockTimer')
-  console.log('[Background] Vault is now locked (Salt cleared from session memory).')
+  chrome.action.setBadgeText({ text: '' })
+  console.log('[Background] Vault is now locked (Salt and summary cleared from session memory).')
 }
 
 // 监听 alarms

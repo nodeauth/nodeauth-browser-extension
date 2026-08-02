@@ -5,11 +5,14 @@ import { generateToken, getTotpProgress } from '@/shared/utils/totp'
 import { useAuth } from './useAuth'
 import { useSettings } from './useSettings'
 import { useUI } from './useUI'
+import { rpc } from '@/shared/utils/rpc'
+import { isServiceMatchDomain } from '@/shared/utils/domainMatcher'
 
 const fullVaultList = ref([])
 const selectedCategory = ref('')
 const searchQuery = ref('')
 const isLoadingVault = ref(false)
+const activeTabUrl = ref('')
 
 let timerInterval = null
 
@@ -17,6 +20,14 @@ export function useVault() {
   const { lockVault, appState, getMemoryMaskingKey, getAllMemoryMaskingKeys } = useAuth()
   const { instanceUrl } = useSettings()
   const { isAddModalOpen, isAddingAccount } = useUI()
+
+  // 匹配当前网页域名的账号列表
+  const currentSiteAccounts = computed(() => {
+    if (!activeTabUrl.value) return []
+    return fullVaultList.value.filter(item => {
+      return item.service && isServiceMatchDomain(item.service, activeTabUrl.value)
+    })
+  })
 
   // 动态分类提取与数量统计（按数量倒序）
   const categories = computed(() => {
@@ -41,7 +52,12 @@ export function useVault() {
         item.service.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
         item.account.toLowerCase().includes(searchQuery.value.toLowerCase())
       
-      const matchCategory = !selectedCategory.value || item.category === selectedCategory.value
+      let matchCategory = true
+      if (selectedCategory.value === 'current_site') {
+        matchCategory = item.service && isServiceMatchDomain(item.service, activeTabUrl.value)
+      } else if (selectedCategory.value) {
+        matchCategory = item.category === selectedCategory.value
+      }
       
       return matchSearch && matchCategory
     })
@@ -85,6 +101,16 @@ export function useVault() {
         category: item.category || 'uncategorized'
       }))
       startTimer()
+      const vaultSummary = fullVaultList.value.map(item => ({
+        service: item.service || ''
+      }))
+      if (chrome?.storage?.session?.set) {
+        await chrome.storage.session.set({ 'sys:sec:vault_summary': vaultSummary })
+      }
+      await initActiveTabUrl()
+      if (currentSiteAccounts.value.length > 0 && (!selectedCategory.value || selectedCategory.value === 'current_site')) {
+        selectedCategory.value = 'current_site'
+      }
     } catch (e) {
       console.error('[Vault] loadVault error:', e)
       if (e.message === 'AUTH_EXPIRED') {
@@ -99,6 +125,7 @@ export function useVault() {
       }
     } finally {
       isLoadingVault.value = false
+      try { rpc.refreshBadge() } catch (e) {}
     }
   }
 
@@ -206,6 +233,19 @@ export function useVault() {
     }
   }
 
+  async function initActiveTabUrl() {
+    try {
+      if (chrome?.tabs?.query) {
+        const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true })
+        if (activeTab && activeTab.url) {
+          activeTabUrl.value = activeTab.url
+        }
+      }
+    } catch (e) {
+      console.warn('[Vault] Query active tab failed:', e)
+    }
+  }
+
   return {
     fullVaultList,
     vaultList,
@@ -215,6 +255,9 @@ export function useVault() {
     isLoadingVault,
     searchQuery,
     incrementingIds,
+    activeTabUrl,
+    currentSiteAccounts,
+    initActiveTabUrl,
     loadVault,
     performSearch,
     saveNewAccount,

@@ -40,6 +40,7 @@
   },
   "vault": {
     "search_placeholder": "Search accounts...",
+    "current_site": "Current Site",
     "loading": "Loading...",
     "empty": "No accounts found",
     "no_match": "No matching accounts",
@@ -111,6 +112,8 @@
     "language": "Language",
     "show_service_icons": "Icons",
     "show_service_icons_desc": "Fetch icons from public services. Note: This sends your account domains to 3rd-party services.",
+    "show_badge": "Badge Count",
+    "show_badge_desc": "Show matching account suggestion count badge on extension icon.",
     "security": "Security",
     "auto_lock": "Auto-lock Delay",
     "lock_immediately": "Immediately",

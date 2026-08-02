@@ -160,4 +160,32 @@ describe('useExtensionState - Vault Actions', () => {
       counter: 0 // Math.max(0, Math.floor(-10)) 清洗为 0
     }))
   })
+
+  it('Happy Path 6: activeTabUrl 匹配 GitHub 页面时，currentSiteAccounts 正确识别并自动激活 current_site 分类', async () => {
+    const { activeTabUrl, currentSiteAccounts, selectedCategory, vaultList, fullVaultList } = state
+    fullVaultList.value = [
+      { id: '1', service: 'GitHub', account: 'git_user', category: 'work' },
+      { id: '2', service: 'Google', account: 'google_user', category: 'personal' }
+    ]
+    activeTabUrl.value = 'https://github.com/login'
+    selectedCategory.value = 'current_site'
+
+    expect(currentSiteAccounts.value.length).toBe(1)
+    expect(currentSiteAccounts.value[0].service).toBe('GitHub')
+    expect(vaultList.value.length).toBe(1)
+    expect(vaultList.value[0].id).toBe('1')
+  })
+
+  it('Edge Case 4: activeTabUrl 无匹配时，currentSiteAccounts 为空，选中全部时列表输出全量', async () => {
+    const { activeTabUrl, currentSiteAccounts, selectedCategory, vaultList, fullVaultList } = state
+    fullVaultList.value = [
+      { id: '1', service: 'GitHub', account: 'git_user', category: 'work' },
+      { id: '2', service: 'Google', account: 'google_user', category: 'personal' }
+    ]
+    activeTabUrl.value = 'https://unknown-site.org'
+    selectedCategory.value = ''
+
+    expect(currentSiteAccounts.value.length).toBe(0)
+    expect(vaultList.value.length).toBe(2)
+  })
 })

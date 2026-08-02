@@ -36,7 +36,8 @@ export const RPC_TYPES = {
   LOCK_VAULT: 'LOCK_VAULT',
   UPDATE_LOCK_TIMER: 'UPDATE_LOCK_TIMER',
   REGISTER_CONTENT_SCRIPT: 'REGISTER_CONTENT_SCRIPT',
-  CAPTURE_ACTIVE_TAB: 'CAPTURE_ACTIVE_TAB'
+  CAPTURE_ACTIVE_TAB: 'CAPTURE_ACTIVE_TAB',
+  REFRESH_BADGE: 'REFRESH_BADGE'
 }
 
 export const rpc = {
@@ -58,5 +59,7 @@ export const rpc = {
 
   registerContentScript: (url) => sendRequest({ type: RPC_TYPES.REGISTER_CONTENT_SCRIPT, url }),
 
-  captureActiveTab: () => sendRequest({ type: RPC_TYPES.CAPTURE_ACTIVE_TAB })
+  captureActiveTab: () => sendRequest({ type: RPC_TYPES.CAPTURE_ACTIVE_TAB }),
+
+  refreshBadge: () => sendRequest({ type: RPC_TYPES.REFRESH_BADGE })
 }
