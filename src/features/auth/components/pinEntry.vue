@@ -59,23 +59,25 @@ async function handleUnlock() {
   align-items: center;
   justify-content: center; /* 垂直居中 */
   text-align: center;
-  background: white;
+  background: var(--card-bg);
   padding: 32px 24px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: var(--shadow-md);
   flex: 1;
 }
 .logo { width: 48px; height: 48px; margin-bottom: 16px; }
-.desc { font-size: 13px; color: #666; margin-bottom: 24px; line-height: 1.5; }
+.desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 24px; line-height: 1.5; }
 .input-group { width: 100%; margin-bottom: 20px; }
 input {
   width: 100%;
   padding: 12px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color-dark);
   border-radius: 8px;
   font-size: 14px;
   text-align: center;
   letter-spacing: 8px;
+  background: var(--item-bg-hover);
+  color: var(--text-main);
   transition: all 0.2s ease;
 }
 input:focus {
@@ -110,12 +112,12 @@ input:focus {
 }
 .forgot-pin a {
   font-size: 13px;
-  color: #999;
+  color: var(--text-light);
   text-decoration: none;
   transition: all 0.2s;
 }
 .forgot-pin a:hover {
-  color: var(--primary-color);
+  color: var(--primary-text);
   text-decoration: underline;
 }
 </style>

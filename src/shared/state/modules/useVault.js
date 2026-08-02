@@ -33,7 +33,7 @@ export function useVault() {
   const categories = computed(() => {
     const counts = {}
     fullVaultList.value.forEach(item => {
-      const cat = item.category || 'uncategorized'
+      const cat = item.category || '____UNCATEGORIZED____'
       counts[cat] = (counts[cat] || 0) + 1
     })
     
@@ -98,7 +98,7 @@ export function useVault() {
         remaining: 30,
         percentage: 0,
         type: item.type || 'totp',
-        category: item.category || 'uncategorized'
+        category: item.category || '____UNCATEGORIZED____'
       }))
       startTimer()
       const vaultSummary = fullVaultList.value.map(item => ({
@@ -142,7 +142,7 @@ export function useVault() {
         account: accountData.account.trim(),
         secret: masked,
         type: accountData.type || 'totp',
-        category: accountData.category?.trim() || 'uncategorized',
+        category: accountData.category?.trim() || '',
         digits: Number(accountData.digits) || 6,
         period: Number(accountData.period) || 30,
         algorithm: accountData.algorithm || 'SHA1',

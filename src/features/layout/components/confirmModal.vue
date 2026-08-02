@@ -29,7 +29,7 @@ const { confirmModal } = useExtensionState()
   z-index: 100;
 }
 .modal-content {
-  background: white;
+  background: var(--card-bg);
   border-radius: 12px;
   padding: 18px 20px 20px;
   width: 100%;

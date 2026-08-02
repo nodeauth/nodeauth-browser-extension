@@ -32,7 +32,7 @@ export function useVaultActions(stateStore) {
             id: item.id,
             service: item.service,
             account: item.account,
-            category: item.category === 'uncategorized' ? '' : (item.category || '')
+            category: item.category === '____UNCATEGORIZED____' ? '' : (item.category || '')
         }
         isEditModalOpen.value = true
     }

@@ -2,7 +2,7 @@
   <div class="vault-view fade-in">
     <!-- 搜索框 -->
     <div class="search-bar">
-      <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" stroke="#999" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
       <input 
         :value="searchQuery" 
         @input="e => performSearch(e.target.value)"
@@ -19,7 +19,7 @@
         :class="{ active: selectedCategory === 'current_site' }"
         @click="selectedCategory = 'current_site'"
       >
-        💡 {{ $t('vault.current_site') }} <span class="count">({{ currentSiteAccounts?.length || 0 }})</span>
+        {{ $t('vault.current_site') }} <span class="count">({{ currentSiteAccounts?.length || 0 }})</span>
       </div>
       <div 
         class="category-item" 
@@ -35,7 +35,7 @@
         :class="{ active: selectedCategory === cat.name }"
         @click="selectedCategory = cat.name"
       >
-        {{ cat.name === 'uncategorized' ? $t('common.uncategorized') : cat.name }} 
+        {{ cat.name === '____UNCATEGORIZED____' ? $t('common.uncategorized') : cat.name }} 
         <span class="count">({{ cat.count }})</span>
       </div>
     </div>
@@ -81,7 +81,7 @@
             <label>{{ $t('vault.category_optional') }}</label>
             <input v-model="editData.category" type="text" list="edit-category-options" :placeholder="$t('vault.category_placeholder')" />
             <datalist id="edit-category-options">
-              <option v-for="cat in categories.filter(c => c.name !== 'uncategorized')" :key="cat.name" :value="cat.name"></option>
+              <option v-for="cat in categories.filter(c => c.name !== '____UNCATEGORIZED____')" :key="cat.name" :value="cat.name"></option>
             </datalist>
           </div>
         </div>
@@ -215,6 +215,7 @@ function handleExportCopy(content, type) {
   box-shadow: var(--shadow-sm);
   outline: none;
   font-size: 14px;
+  color: var(--text-main);
 }
 .search-icon {
   position: absolute;
@@ -248,6 +249,7 @@ function handleExportCopy(content, type) {
 }
 .category-item:hover {
   background-color: var(--category-hover);
+  color: var(--text-main);
 }
 .category-item.active {
   background-color: var(--primary-color);
@@ -366,6 +368,8 @@ function handleExportCopy(content, type) {
   border: 1px solid var(--border-color-dark);
   border-radius: var(--radius-sm);
   font-size: 14px;
+  background: var(--item-bg-hover);
+  color: var(--text-main);
 }
 .modal-footer {
   padding: 16px 20px;
@@ -428,7 +432,7 @@ function handleExportCopy(content, type) {
 }
 .account-details {
   width: 100%;
-  background: #f9f9f9;
+  background: var(--item-bg-hover);
   padding: 12px;
   border-radius: var(--radius-sm);
   margin-bottom: 16px;

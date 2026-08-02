@@ -14,7 +14,8 @@ const settings = ref({
   clipboardClear: 'clear_never',
   language: getDefaultLanguage(),
   showServiceIcons: false,
-  appShowBadge: true
+  appShowBadge: true,
+  appTheme: 'system' // 'system', 'light', 'dark'
 })
 
 // 监听设置变化同步到 Storage 和 Background
@@ -26,6 +27,7 @@ watch(settings, async (newVal) => {
     'sys:ui:locale': newVal.language,
     'sys:ui:show_icons': newVal.showServiceIcons,
     'sys:ui:show_badge': newVal.appShowBadge,
+    'sys:ui:theme': newVal.appTheme,
     'sys:ui:settings': { appShowBadge: newVal.appShowBadge }
   })
   setLanguage(newVal.language)
@@ -43,6 +45,7 @@ async function loadSettings() {
     'sys:ui:locale',
     'sys:ui:show_icons',
     'sys:ui:show_badge',
+    'sys:ui:theme',
     'sys:state:instance_url'
   ])
   settings.value = {
@@ -51,10 +54,12 @@ async function loadSettings() {
     clipboardClear: data['sys:ui:clipboard'] || 'clear_never',
     language: data['sys:ui:locale'] || getDefaultLanguage(),
     showServiceIcons: data['sys:ui:show_icons'] !== undefined ? data['sys:ui:show_icons'] : false,
-    appShowBadge: data['sys:ui:show_badge'] !== undefined ? data['sys:ui:show_badge'] : true
+    appShowBadge: data['sys:ui:show_badge'] !== undefined ? data['sys:ui:show_badge'] : true,
+    appTheme: data['sys:ui:theme'] || 'system'
   }
   instanceUrl.value = data['sys:state:instance_url'] || ''
 }
+
 
 async function startPairing() {
   let url = instanceUrl.value.trim()

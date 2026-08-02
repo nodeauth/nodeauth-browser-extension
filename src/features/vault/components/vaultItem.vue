@@ -34,10 +34,10 @@
       <!-- TOTP/Steam：显示倒计时圆圈 -->
       <div class="progress-circle" v-else>
         <svg width="30" height="30">
-          <circle class="bg" stroke="#eee" stroke-width="2" fill="transparent" r="12" cx="15" cy="15" />
+          <circle class="bg" stroke="var(--border-color-dark)" stroke-width="2" fill="transparent" r="12" cx="15" cy="15" />
           <circle 
             class="progress" 
-            stroke="#2c3e50" 
+            stroke="var(--primary-text)" 
             stroke-width="2" 
             fill="transparent" 
             r="12" 
@@ -224,7 +224,7 @@ function progressOffset(percentage) {
 .totp-code {
   font-size: 19px;
   font-weight: 700;
-  color: var(--primary-color);
+  color: var(--primary-text);
   letter-spacing: 0.5px;
   font-variant-numeric: tabular-nums;
   margin-right: 8px;
@@ -248,7 +248,7 @@ function progressOffset(percentage) {
   position: absolute;
   font-size: 10px;
   font-weight: 700;
-  color: var(--primary-color);
+  color: var(--primary-text);
 }
 .progress-text.text-warning {
   color: var(--error-color);
@@ -273,7 +273,7 @@ function progressOffset(percentage) {
 }
 .action-btn:hover {
   background: var(--category-bg);
-  color: var(--primary-color);
+  color: var(--primary-text);
 }
 .action-menu {
   position: fixed;
@@ -318,17 +318,17 @@ function progressOffset(percentage) {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  border: 2px solid #c8d5e8;
+  border: 2px solid var(--border-color-dark);
   background: transparent;
-  color: #5b8fb9;
+  color: var(--text-muted);
   cursor: pointer;
   transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.2s;
   flex-shrink: 0;
 }
 .hotp-btn:hover:not(:disabled) {
-  background: #eef4fc;
-  border-color: #5b8fb9;
-  color: #2c6fad;
+  background: var(--primary-light);
+  border-color: var(--primary-color);
+  color: var(--primary-text);
 }
 .hotp-btn:disabled {
   opacity: 0.5;

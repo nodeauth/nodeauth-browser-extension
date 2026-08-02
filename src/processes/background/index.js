@@ -29,7 +29,7 @@ async function registerContentScript(instanceUrl) {
     const matchPattern = `${origin}/*`
 
     // 先注销旧的（首次注册时会静默失败，无需处理）
-    await chrome.scripting.unregisterContentScripts({ ids: ['nodeauth-bridge'] }).catch(() => {})
+    await chrome.scripting.unregisterContentScripts({ ids: ['nodeauth-bridge'] }).catch(() => { })
 
     await chrome.scripting.registerContentScripts([{
       id: 'nodeauth-bridge',
@@ -215,7 +215,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   // --- 会话锁控通信 ---
-  
+
   if (message.type === 'GET_VAULT_KEY') {
     // Popup 启动时查询是否处于解锁状态
     chrome.storage.session.get(['sys:sec:active_salt']).then((res) => {
@@ -271,7 +271,7 @@ chrome.runtime.onConnect.addListener((port) => {
       // 弹窗关闭时，根据用户设置处理锁定逻辑
       const data = await chrome.storage.local.get(['sys:ui:autolock'])
       const delayMode = data['sys:ui:autolock'] || '0'
-      
+
       if (delayMode === '0') {
         clearLockState()
         console.log('[Background] Popup closed, immediate lock triggered.')
@@ -286,7 +286,7 @@ chrome.runtime.onConnect.addListener((port) => {
 
 async function restartAutoLockTimer() {
   await chrome.alarms.clear('autoLockTimer')
-  
+
   const data = await chrome.storage.local.get(['sys:ui:autolock'])
   const delayMode = data['sys:ui:autolock'] || '0' // 默认 0 (立即)
 
@@ -296,7 +296,7 @@ async function restartAutoLockTimer() {
   if (delayMode === '0' || delayMode === '-1') {
     return
   }
-  
+
   const delayInMinutes = parseInt(delayMode)
   if (delayInMinutes > 0) {
     chrome.alarms.create('autoLockTimer', { delayInMinutes })
@@ -417,7 +417,7 @@ async function handleHandshake(payload, tabId, senderUrl) {
   try {
     chrome.notifications.create({
       type: 'basic',
-      iconUrl: 'icons/icon-48x48.png',
+      iconUrl: '/icons/icon-48x48.png',
       title: 'NodeAuth',
       message: '扩展程序已获取授权数据，请点击扩展图标设置解锁密码。'
     })

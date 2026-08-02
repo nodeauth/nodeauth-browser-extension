@@ -50,7 +50,7 @@ watch(currentView, (newView) => {
   justify-content: center;
   border: none;
   background: transparent;
-  color: var(--text-light);
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s;
   gap: 4px;
@@ -62,11 +62,11 @@ watch(currentView, (newView) => {
 }
 
 .nav-item.active {
-  color: var(--primary-color);
+  color: var(--primary-text);
 }
 
 .nav-item:hover:not(.active) {
-  color: var(--text-secondary);
+  color: var(--text-main);
 }
 
 .nav-item svg {

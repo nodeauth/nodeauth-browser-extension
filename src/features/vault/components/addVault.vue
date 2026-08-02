@@ -125,7 +125,7 @@
           <label>{{ $t('vault.category_optional') }}</label>
           <input v-model="form.category" type="text" list="category-options" :placeholder="$t('vault.category_placeholder')" />
           <datalist id="category-options">
-            <option v-for="cat in categories.filter(c => c.name !== 'uncategorized')" :key="cat.name" :value="cat.name"></option>
+            <option v-for="cat in categories.filter(c => c.name !== '____UNCATEGORIZED____')" :key="cat.name" :value="cat.name"></option>
           </datalist>
         </div>
       </div>
@@ -357,8 +357,8 @@ async function handleSave() {
 }
 .btn-scan-action:hover {
   background: var(--primary-light);
-  color: var(--primary-color);
-  border-color: rgba(52, 81, 178, 0.3);
+  color: var(--primary-text);
+  border-color: rgba(var(--primary-color-rgb), 0.3);
 }
 .btn-scan-action.is-active {
   background: var(--primary-color);
@@ -391,7 +391,7 @@ async function handleSave() {
   background: var(--primary-light);
   border: 1px solid rgba(52, 81, 178, 0.2);
   font-size: 11px;
-  color: var(--primary-color);
+  color: var(--primary-text);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -401,7 +401,7 @@ async function handleSave() {
   transition: all 0.2s;
 }
 .btn-toggle-advanced:hover {
-  background: rgba(52, 81, 178, 0.2);
+  background: rgba(var(--primary-color-rgb), 0.2);
 }
 .btn-toggle-advanced.is-active {
   color: #fff;
@@ -425,7 +425,7 @@ async function handleSave() {
   border: 1px solid var(--border-color-dark);
   border-radius: var(--radius-sm);
   font-size: 13px;
-  background: var(--card-bg);
+  background: var(--item-bg-hover);
   color: var(--text-main);
   box-sizing: border-box;
 }
@@ -453,7 +453,7 @@ async function handleSave() {
   transition: color 0.2s;
 }
 .icon-toggle-btn:hover {
-  color: var(--primary-color);
+  color: var(--primary-text);
 }
 .form-group input:focus, .form-select:focus {
   outline: none;

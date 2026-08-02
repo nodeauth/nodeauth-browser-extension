@@ -17,6 +17,14 @@
         </select>
       </div>
       <div class="setting-item">
+        <span>{{ $t('settings.theme') }}</span>
+        <select v-model="settings.appTheme">
+          <option value="system">{{ $t('settings.theme_system') }}</option>
+          <option value="light">{{ $t('settings.theme_light') }}</option>
+          <option value="dark">{{ $t('settings.theme_dark') }}</option>
+        </select>
+      </div>
+      <div class="setting-item">
         <div class="label-with-desc">
           <span>{{ $t('settings.show_service_icons') }}</span>
           <small>{{ $t('settings.show_service_icons_desc') }}</small>
@@ -130,6 +138,7 @@ h4 {
   border: 1px solid var(--border-color-dark);
   font-size: 13px;
   background: var(--item-bg-hover);
+  color: var(--text-main);
 }
 .setting-item.readonly { flex-direction: column; align-items: flex-start; gap: 8px; }
 .setting-item code {
@@ -138,7 +147,7 @@ h4 {
   padding: 6px 10px;
   border-radius: 4px;
   font-size: 12px;
-  color: var(--primary-color);
+  color: var(--primary-text);
   word-break: break-all;
   width: 100%;
   border: 1px solid var(--border-color-light);
@@ -160,13 +169,13 @@ h4 {
 .btn-outline:hover { background: var(--category-bg); color: var(--text-main); }
 .btn-danger {
   background: rgba(239, 68, 68, 0.08);
-  color: #dc2626;
+  color: var(--error-color);
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
 .btn-danger:hover {
-  background: #dc2626;
+  background: var(--error-color);
   color: white;
-  border-color: #dc2626;
+  border-color: var(--error-color);
   box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
 }
 .settings-footer {
@@ -189,7 +198,7 @@ h4 {
 }
 .settings-footer a {
   font-size: 12px;
-  color: var(--primary-color);
+  color: var(--primary-text);
   text-decoration: none;
   opacity: 0.8;
   transition: opacity 0.2s;

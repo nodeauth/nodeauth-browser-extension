@@ -177,7 +177,7 @@ onBeforeUnmount(() => {
   width: 24px;
   height: 24px;
   border-radius: 4px;
-  background-color: #f0f2f5;
+  background-color: var(--category-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -191,7 +191,7 @@ onBeforeUnmount(() => {
   object-fit: cover;
 }
 .service-icon-fallback {
-  color: var(--primary-color);
+  color: var(--primary-text);
   font-size: 12px;
   font-weight: bold;
 }
