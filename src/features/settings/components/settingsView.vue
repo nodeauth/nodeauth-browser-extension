@@ -1,27 +1,12 @@
 <template>
   <div class="settings-view fade-in">
     <div class="settings-section">
-      <h4>{{ $t('settings.appearance') }}</h4>
-      <div class="setting-item">
-        <span>{{ $t('settings.density') }}</span>
-        <select v-model="settings.density">
-          <option value="standard">{{ $t('settings.density_standard') }}</option>
-          <option value="compact">{{ $t('settings.density_compact') }}</option>
-        </select>
-      </div>
+      <h4>{{ $t('settings.general') }}</h4>
       <div class="setting-item">
         <span>{{ $t('settings.language') }}</span>
         <select v-model="settings.language">
           <option value="zh-CN">简体中文</option>
           <option value="en-US">English</option>
-        </select>
-      </div>
-      <div class="setting-item">
-        <span>{{ $t('settings.theme') }}</span>
-        <select v-model="settings.appTheme">
-          <option value="system">{{ $t('settings.theme_system') }}</option>
-          <option value="light">{{ $t('settings.theme_light') }}</option>
-          <option value="dark">{{ $t('settings.theme_dark') }}</option>
         </select>
       </div>
       <div class="setting-item">
@@ -42,6 +27,35 @@
         <select v-model="settings.appShowBadge">
           <option :value="true">{{ $t('common.on') }}</option>
           <option :value="false">{{ $t('common.off') }}</option>
+        </select>
+      </div>
+      <div class="setting-item">
+        <div class="label-with-desc">
+          <span>{{ $t('settings.inline_autofill') }}</span>
+          <small>{{ $t('settings.inline_autofill_desc') }}</small>
+        </div>
+        <select :value="settings.inlineAutofill" @change="handleAutofillChange">
+          <option :value="true">{{ $t('common.on') }}</option>
+          <option :value="false">{{ $t('common.off') }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h4>{{ $t('settings.appearance') }}</h4>
+      <div class="setting-item">
+        <span>{{ $t('settings.density') }}</span>
+        <select v-model="settings.density">
+          <option value="standard">{{ $t('settings.density_standard') }}</option>
+          <option value="compact">{{ $t('settings.density_compact') }}</option>
+        </select>
+      </div>
+      <div class="setting-item">
+        <span>{{ $t('settings.theme') }}</span>
+        <select v-model="settings.appTheme">
+          <option value="system">{{ $t('settings.theme_system') }}</option>
+          <option value="light">{{ $t('settings.theme_light') }}</option>
+          <option value="dark">{{ $t('settings.theme_dark') }}</option>
         </select>
       </div>
     </div>
@@ -100,6 +114,28 @@ const { t } = useI18n()
 
 // 动态获取版本号（由 Vite define 注入）
 const fullVersion = `v${__APP_VERSION__} (${__GIT_HASH__})`
+
+const handleAutofillChange = async (e) => {
+  const isTurningOn = e.target.value === 'true'
+  if (isTurningOn) {
+    try {
+      const granted = await chrome.permissions.request({ origins: ['<all_urls>'] })
+      if (granted) {
+        settings.value.inlineAutofill = true
+      } else {
+        e.target.value = 'false'
+      }
+    } catch (err) {
+      console.warn('[NodeAuth] Permission request failed:', err)
+      e.target.value = 'false'
+    }
+  } else {
+    settings.value.inlineAutofill = false
+    try {
+      await chrome.permissions.remove({ origins: ['<all_urls>'] })
+    } catch (err) {}
+  }
+}
 </script>
 
 <style scoped>

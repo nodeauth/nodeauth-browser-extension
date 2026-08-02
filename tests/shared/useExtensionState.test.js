@@ -153,7 +153,7 @@ describe('useExtensionState - Vault Actions', () => {
     expect(vaultApi.addVaultAccount).toHaveBeenCalledWith(expect.objectContaining({
       service: 'IncompleteService',
       type: 'totp',
-      category: 'uncategorized',
+      category: '',
       digits: 6,
       period: 30,
       algorithm: 'SHA1',

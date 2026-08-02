@@ -56,6 +56,9 @@
 
   --header-bg: #0f172a;
 
+  /* 提示与状态色 */
+  --error-color: #f87171;
+
   /* 背景与中性色 */
   --bg-color: #020617;
   --card-bg: #0f172a;

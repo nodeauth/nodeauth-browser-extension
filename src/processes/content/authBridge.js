@@ -68,4 +68,7 @@ async function init() {
   }
 }
 
+import { initOverlayInjector } from './overlayInjector'
+
 init()
+initOverlayInjector()

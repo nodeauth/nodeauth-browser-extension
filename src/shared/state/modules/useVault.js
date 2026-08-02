@@ -101,8 +101,16 @@ export function useVault() {
         category: item.category || '____UNCATEGORIZED____'
       }))
       startTimer()
+      // 🔐 安全演进：为支持网页注入悬浮窗实时计算最新验证码，此处在 Session（纯内存）中存入 masked_secret
+      // Background 会利用同在 Session 中的 active_salt 进行动态解密并生成实时 TOTP，整个过程不落盘
       const vaultSummary = fullVaultList.value.map(item => ({
-        service: item.service || ''
+        id: item.id,
+        service: item.service || '',
+        account: item.account || '',
+        masked_secret: item.secret,
+        digits: item.digits || 6,
+        period: item.period || 30,
+        type: item.type || 'totp'
       }))
       if (chrome?.storage?.session?.set) {
         await chrome.storage.session.set({ 'sys:sec:vault_summary': vaultSummary })
@@ -231,6 +239,7 @@ export function useVault() {
         })
       }
     }
+
   }
 
   async function initActiveTabUrl() {

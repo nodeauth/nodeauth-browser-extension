@@ -25,19 +25,31 @@ const tabPrivateKeys = new Map()
  */
 async function registerContentScript(instanceUrl) {
   try {
-    const origin = new URL(instanceUrl).origin
-    const matchPattern = `${origin}/*`
+    let matches = []
+    if (instanceUrl) {
+      try {
+        const origin = new URL(instanceUrl).origin
+        matches.push(`${origin}/*`)
+      } catch (e) {}
+    }
+
+    const data = await chrome.storage.local.get(['sys:ui:inline_autofill'])
+    if (data['sys:ui:inline_autofill']) {
+      matches.push('<all_urls>')
+    }
 
     // 先注销旧的（首次注册时会静默失败，无需处理）
     await chrome.scripting.unregisterContentScripts({ ids: ['nodeauth-bridge'] }).catch(() => { })
 
-    await chrome.scripting.registerContentScripts([{
-      id: 'nodeauth-bridge',
-      matches: [matchPattern],
-      js: ['processes/content/authBridge.js'],
-      runAt: 'document_start'
-    }])
-    console.log(`[Background] Content Script 已精准注册至: ${matchPattern}`)
+    if (matches.length > 0) {
+      await chrome.scripting.registerContentScripts([{
+        id: 'nodeauth-bridge',
+        matches: matches,
+        js: ['processes/content/authBridge.js'],
+        runAt: 'document_start'
+      }])
+      console.log(`[Background] Content Script 已动态注册至: ${matches.join(', ')}`)
+    }
   } catch (e) {
     console.warn('[Background] Content Script 动态注册失败:', e)
   }
@@ -48,11 +60,15 @@ async function registerContentScript(instanceUrl) {
  */
 async function restoreContentScript() {
   const data = await chrome.storage.local.get(['sys:state:instance_url'])
-  const instanceUrl = data['sys:state:instance_url']
-  if (instanceUrl) {
-    await registerContentScript(instanceUrl)
-  }
+  await registerContentScript(data['sys:state:instance_url'])
 }
+
+// 监听设置变化，当用户开启/关闭一键填充时，动态刷新注入
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'local' && changes['sys:ui:inline_autofill']) {
+    restoreContentScript()
+  }
+})
 
 // SW 首次安装或浏览器启动时恢复注册
 chrome.runtime.onInstalled.addListener(restoreContentScript)
@@ -102,6 +118,8 @@ async function decryptPayload(sharedKey, ciphertextBase64, ivBase64) {
 
 import { RPC_TYPES } from '@/shared/utils/rpc'
 import { isServiceMatchDomain } from '@/shared/utils/domainMatcher'
+import { generateToken } from '@/shared/utils/totp'
+import { deriveMaskingKey, unmaskSecret } from '@/shared/utils/crypto'
 
 /**
  * 刷新当前激活 Tab 的自动填充推荐角标 (Badge)
@@ -179,6 +197,74 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   if (message.type === RPC_TYPES.REFRESH_BADGE) {
     updateBadgeForActiveTab().then(() => sendResponse({ success: true }))
+    return true
+  }
+
+  if (message.type === RPC_TYPES.GET_MATCHED_ACCOUNTS) {
+    (async () => {
+      try {
+        const settingsRes = await chrome.storage.local.get(['sys:ui:inline_autofill'])
+        const enabled = settingsRes['sys:ui:inline_autofill'] !== false
+        if (!enabled) return sendResponse({ success: true, accounts: [] })
+
+        const sessionRes = await chrome.storage.session.get(['sys:sec:active_salt', 'sys:sec:vault_summary'])
+        const salt = sessionRes?.['sys:sec:active_salt']
+        const vaultSummary = sessionRes?.['sys:sec:vault_summary'] || []
+
+        if (!salt || !vaultSummary.length) {
+          return sendResponse({ success: true, accounts: [], locked: !salt })
+        }
+        if (!message.url) {
+          return sendResponse({ success: true, accounts: [] })
+        }
+
+        const matchedBase = vaultSummary
+          .filter(item => item.service && isServiceMatchDomain(item.service, message.url))
+
+        // 动态推导掩码密钥（从 session 盐）
+        const salts = salt.split(',')
+        const maskingKeys = await Promise.all(salts.map(s => deriveMaskingKey(s.trim())))
+
+        // 并发异步计算所有匹配账号的实时 TOTP 验证码
+        const matched = await Promise.all(
+          matchedBase.map(async (item) => {
+            let code
+            try {
+              if (!item.masked_secret) {
+                code = 'NOSEC'
+              } else if (item.type === 'hotp') {
+                code = 'HOTP'
+              } else {
+                const secret = await unmaskSecret(item.masked_secret, maskingKeys)
+                if (secret) {
+                  code = await generateToken({
+                    secret: secret,
+                    digits: item.digits || 6,
+                    period: item.period || 30,
+                    isSteam: item.type === 'steam',
+                    type: item.type
+                  })
+                } else {
+                  code = 'NOUNMASK'
+                }
+              }
+            } catch (e) {
+              console.warn('[Background] Failed to generate live TOTP:', e)
+              code = 'ERR'
+            }
+            return {
+              id: item.id,
+              service: item.service,
+              account: item.account,
+              code: String(code)
+            }
+          })
+        )
+        sendResponse({ success: true, accounts: matched })
+      } catch (e) {
+        sendResponse({ success: false, error: e.message })
+      }
+    })()
     return true
   }
 

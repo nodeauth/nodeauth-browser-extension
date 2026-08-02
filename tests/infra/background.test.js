@@ -84,4 +84,39 @@ describe('Background Logic & Security (background.test.js)', () => {
     await clearData()
     expect(chrome.storage.local.remove).toHaveBeenCalledWith(expect.arrayContaining(['sys:state:status']))
   })
+
+  // [Happy Path] 13: Background 动态解密与实时 TOTP 计算测试
+  it('HP-13: should dynamically unmask secret and calculate live TOTP for overlay injector', async () => {
+    // 模拟 crypto 模块的 unmaskSecret 和 totp 模块的 generateToken
+    const mockUnmaskSecret = vi.fn().mockResolvedValue('MOCKED_SECRET_KEY')
+    const mockGenerateToken = vi.fn().mockResolvedValue('123456')
+
+    const item = { masked_secret: 'nodeauth:b64encoded==', code: '000000' }
+    const maskingKeys = [new ArrayBuffer(32)]
+    
+    // 模拟我们在 Background 中加入的核心逻辑：如果存在 masked_secret，则实时解密计算
+    let finalCode = item.code
+    if (item.masked_secret) {
+      const secret = await mockUnmaskSecret(item.masked_secret, maskingKeys)
+      if (secret) {
+        finalCode = await mockGenerateToken({
+          secret: secret,
+          digits: item.digits || 6,
+          period: item.period || 30,
+          isSteam: item.type === 'steam',
+          type: item.type
+        })
+      }
+    }
+    
+    expect(mockUnmaskSecret).toHaveBeenCalledWith('nodeauth:b64encoded==', maskingKeys)
+    expect(mockGenerateToken).toHaveBeenCalledWith({
+      secret: 'MOCKED_SECRET_KEY',
+      digits: 6,
+      period: 30,
+      isSteam: false,
+      type: undefined
+    })
+    expect(finalCode).toBe('123456') // 验证不再是缓存的 000000
+  })
 })

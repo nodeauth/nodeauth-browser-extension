@@ -37,12 +37,15 @@ export const RPC_TYPES = {
   UPDATE_LOCK_TIMER: 'UPDATE_LOCK_TIMER',
   REGISTER_CONTENT_SCRIPT: 'REGISTER_CONTENT_SCRIPT',
   CAPTURE_ACTIVE_TAB: 'CAPTURE_ACTIVE_TAB',
-  REFRESH_BADGE: 'REFRESH_BADGE'
+  REFRESH_BADGE: 'REFRESH_BADGE',
+  GET_MATCHED_ACCOUNTS: 'GET_MATCHED_ACCOUNTS'
 }
 
 export const rpc = {
   // --- Content Script <-> Background ---
   getPublicKey: () => sendRequest({ type: RPC_TYPES.GET_PUBLIC_KEY }),
+  
+  getMatchedAccounts: (url) => sendRequest({ type: RPC_TYPES.GET_MATCHED_ACCOUNTS, url }),
   
   sendHandshake: (payload) => sendRequest({ type: RPC_TYPES.EXT_HANDSHAKE_PAYLOAD, payload }),
 

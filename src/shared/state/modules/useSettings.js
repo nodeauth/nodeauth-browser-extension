@@ -15,7 +15,8 @@ const settings = ref({
   language: getDefaultLanguage(),
   showServiceIcons: false,
   appShowBadge: true,
-  appTheme: 'system' // 'system', 'light', 'dark'
+  appTheme: 'system', // 'system', 'light', 'dark'
+  inlineAutofill: false
 })
 
 // 监听设置变化同步到 Storage 和 Background
@@ -28,7 +29,8 @@ watch(settings, async (newVal) => {
     'sys:ui:show_icons': newVal.showServiceIcons,
     'sys:ui:show_badge': newVal.appShowBadge,
     'sys:ui:theme': newVal.appTheme,
-    'sys:ui:settings': { appShowBadge: newVal.appShowBadge }
+    'sys:ui:inline_autofill': newVal.inlineAutofill,
+    'sys:ui:settings': { appShowBadge: newVal.appShowBadge, inlineAutofill: newVal.inlineAutofill }
   })
   setLanguage(newVal.language)
   try {
@@ -46,6 +48,7 @@ async function loadSettings() {
     'sys:ui:show_icons',
     'sys:ui:show_badge',
     'sys:ui:theme',
+    'sys:ui:inline_autofill',
     'sys:state:instance_url'
   ])
   settings.value = {
@@ -55,7 +58,8 @@ async function loadSettings() {
     language: data['sys:ui:locale'] || getDefaultLanguage(),
     showServiceIcons: data['sys:ui:show_icons'] !== undefined ? data['sys:ui:show_icons'] : false,
     appShowBadge: data['sys:ui:show_badge'] !== undefined ? data['sys:ui:show_badge'] : true,
-    appTheme: data['sys:ui:theme'] || 'system'
+    appTheme: data['sys:ui:theme'] || 'system',
+    inlineAutofill: data['sys:ui:inline_autofill'] !== undefined ? data['sys:ui:inline_autofill'] : false
   }
   instanceUrl.value = data['sys:state:instance_url'] || ''
 }
