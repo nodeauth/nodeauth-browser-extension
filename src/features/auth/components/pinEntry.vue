@@ -76,15 +76,31 @@ input {
   font-size: 14px;
   text-align: center;
   letter-spacing: 8px;
+  transition: all 0.2s ease;
+}
+input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-light);
 }
 .btn-primary {
   width: 100%;
   padding: 12px;
-  background-color: #0f3460;
+  background-color: var(--primary-color);
   color: white;
   border: none;
   border-radius: 8px;
-  font-weight: 500;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+  box-shadow: 0 4px 12px rgba(52, 81, 178, 0.2);
+}
+.btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 .fade-in { animation: fadeIn 0.3s ease; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
@@ -99,7 +115,7 @@ input {
   transition: all 0.2s;
 }
 .forgot-pin a:hover {
-  color: #0f3460;
+  color: var(--primary-color);
   text-decoration: underline;
 }
 </style>

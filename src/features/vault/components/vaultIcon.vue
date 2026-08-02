@@ -212,7 +212,7 @@ onBeforeUnmount(() => {
   object-fit: cover;
 }
 .service-icon-fallback {
-  color: #0f3460;
+  color: var(--primary-color);
   font-size: 12px;
   font-weight: bold;
 }

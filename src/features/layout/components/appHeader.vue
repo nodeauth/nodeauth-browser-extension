@@ -24,7 +24,7 @@ const { appState, isAddModalOpen, lockVault } = useExtensionState()
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  background-color: var(--primary-color);
+  background-color: var(--header-bg);
   color: var(--text-white);
   box-shadow: var(--shadow-sm);
   z-index: 10;

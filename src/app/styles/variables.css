@@ -1,16 +1,18 @@
 /* 核心设计令牌 - 颜色、圆角、阴影 */
 :root {
-  /* 品牌色 */
-  --primary-color: #0f3460;
-  --primary-color-rgb: 15, 52, 96;
-  --primary-hover: #16467a;
-  --primary-light: rgba(15, 52, 96, 0.05);
+  /* 品牌色 - 官方皇家靛蓝 #3451B2 */
+  --primary-color: #3451B2;
+  --primary-color-rgb: 52, 81, 178;
+  --primary-hover: #254099;
+  --primary-light: rgba(52, 81, 178, 0.08);
+  /* 顶部 Header 压顶深蓝（同色族向调深 20%） */
+  --header-bg: #1e2f75;
 
   /* 功能色 */
-  --success-color: #2ecc71;
-  --warning-color: #f39c12;
-  --error-color: #ff4d4f;
-  --error-bg: #fff1f0;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+  --error-bg: rgba(239, 68, 68, 0.08);
 
   /* 背景与中性色 */
   --bg-color: #f8fafc;

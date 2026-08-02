@@ -123,14 +123,15 @@ h4 {
 }
 .setting-item.readonly { flex-direction: column; align-items: flex-start; gap: 8px; }
 .setting-item code {
-  font-family: monospace;
+  font-family: 'JetBrains Mono', monospace;
   background: var(--bg-color);
-  padding: 4px 8px;
+  padding: 6px 10px;
   border-radius: 4px;
   font-size: 12px;
-  color: var(--error-color);
+  color: var(--primary-color);
   word-break: break-all;
   width: 100%;
+  border: 1px solid var(--border-color-light);
 }
 .label-with-desc { display: flex; flex-direction: column; }
 .label-with-desc small { font-size: 11px; color: var(--text-light); margin-top: 2px; }
@@ -143,9 +144,21 @@ h4 {
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 .btn-outline { background: transparent; border: 1px solid var(--border-color-dark); color: var(--text-secondary); }
-.btn-danger { background: var(--error-color); color: white; }
+.btn-outline:hover { background: var(--category-bg); color: var(--text-main); }
+.btn-danger {
+  background: rgba(239, 68, 68, 0.08);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.btn-danger:hover {
+  background: #dc2626;
+  color: white;
+  border-color: #dc2626;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+}
 .settings-footer {
   text-align: center;
   margin-top: 12px;
