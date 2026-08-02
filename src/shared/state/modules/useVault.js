@@ -114,11 +114,12 @@ export function useVault() {
         service: accountData.service.trim(),
         account: accountData.account.trim(),
         secret: masked,
-        type: 'totp',
-        category: accountData.category?.trim() || '默认',
-        digits: 6,
-        period: 30,
-        algorithm: 'SHA1'
+        type: accountData.type || 'totp',
+        category: accountData.category?.trim() || 'uncategorized',
+        digits: Number(accountData.digits) || 6,
+        period: Number(accountData.period) || 30,
+        algorithm: accountData.algorithm || 'SHA1',
+        counter: Math.max(0, Math.floor(Number(accountData.counter) || 0))
       }
       await addVaultAccount(payload)
       isAddModalOpen.value = false

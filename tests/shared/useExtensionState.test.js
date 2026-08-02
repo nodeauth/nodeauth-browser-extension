@@ -119,4 +119,45 @@ describe('useExtensionState - Vault Actions', () => {
     expect(vaultApi.moveToTrash).toHaveBeenCalledWith('1')
     expect(vaultApi.hardDeleteAccount).not.toHaveBeenCalled()
   })
+
+  it('Happy Path 5: saveNewAccount 正确透传高级参数与多类型 (Steam, HOTP, 8位)', async () => {
+    const { saveNewAccount } = state
+    await saveNewAccount({
+      service: 'SteamService',
+      account: 'steam_user',
+      secret: 'JBSWY3DPEHPK3PXP',
+      type: 'steam',
+      digits: 5,
+      period: 30,
+      algorithm: 'SHA1'
+    })
+
+    expect(vaultApi.addVaultAccount).toHaveBeenCalledWith(expect.objectContaining({
+      service: 'SteamService',
+      type: 'steam',
+      digits: 5,
+      period: 30,
+      algorithm: 'SHA1'
+    }))
+  })
+
+  it('Edge Case 3: saveNewAccount 缺失参数安全降级与非法 counter 清洗', async () => {
+    const { saveNewAccount } = state
+    await saveNewAccount({
+      service: 'IncompleteService',
+      account: 'test_user',
+      secret: 'JBSWY3DPEHPK3PXP',
+      counter: -10 // 非法负数计数器
+    })
+
+    expect(vaultApi.addVaultAccount).toHaveBeenCalledWith(expect.objectContaining({
+      service: 'IncompleteService',
+      type: 'totp',
+      category: 'uncategorized',
+      digits: 6,
+      period: 30,
+      algorithm: 'SHA1',
+      counter: 0 // Math.max(0, Math.floor(-10)) 清洗为 0
+    }))
+  })
 })

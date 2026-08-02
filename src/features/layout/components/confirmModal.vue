@@ -31,44 +31,52 @@ const { confirmModal } = useExtensionState()
 .modal-content {
   background: white;
   border-radius: 12px;
-  padding: 24px 20px;
+  padding: 18px 20px 20px;
   width: 100%;
   box-shadow: 0 10px 30px rgba(0,0,0,0.15);
 }
+.modal-content h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-main, #1e293b);
+  text-align: center;
+}
 .modal-desc {
-  font-size: 12px;
-  color: #888;
-  margin-bottom: 20px;
+  font-size: 13.5px;
+  color: var(--text-secondary, #475569);
+  line-height: 1.5;
+  margin-bottom: 0;
   text-align: center;
 }
 .modal-actions {
   display: flex;
   gap: 12px;
-  margin-top: 24px;
+  margin-top: 18px;
 }
 .btn {
   width: 100%;
-  padding: 12px;
+  padding: 10px 12px;
   border: none;
   border-radius: 8px;
-  font-size: 15px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
 }
 .btn-secondary {
-  background-color: #f1f1f1;
-  color: #333;
+  background-color: var(--category-bg, #f1f5f9);
+  color: var(--text-main, #334155);
 }
 .btn-danger {
-  background: #d9534f;
+  background: #dc2626;
   color: white;
 }
 .fade-in {
-  animation: fadeIn 0.3s ease-in-out;
+  animation: fadeIn 0.25s ease-in-out;
 }
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
+  from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 </style>

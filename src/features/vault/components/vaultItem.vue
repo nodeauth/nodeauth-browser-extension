@@ -154,8 +154,10 @@ function handleCopyCode() {
 const radius = computed(() => settings.value.density === 'compact' ? 10 : 12)
 
 function formatCode(code) {
-  if (!code || code === '------' || code.length !== 6) return code
-  return `${code.slice(0, 3)} ${code.slice(3)}`
+  if (!code || code === '------' || code === 'ERROR') return code
+  if (code.length === 8) return `${code.slice(0, 4)} ${code.slice(4)}`
+  if (code.length === 6) return `${code.slice(0, 3)} ${code.slice(3)}`
+  return code
 }
 
 function progressOffset(percentage) {

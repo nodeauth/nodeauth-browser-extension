@@ -100,10 +100,17 @@ async function decryptPayload(sharedKey, ciphertextBase64, ivBase64) {
   return JSON.parse(decodedStr)
 }
 
-// --- 消息处理中枢 ---
+import { RPC_TYPES } from '@/shared/utils/rpc'
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === 'GET_PUBLIC_KEY') {
+  if (message.type === RPC_TYPES.CAPTURE_ACTIVE_TAB) {
+    chrome.tabs.captureVisibleTab(null, { format: 'png' })
+      .then(dataUrl => sendResponse({ success: true, dataUrl }))
+      .catch(err => sendResponse({ success: false, error: err.message }))
+    return true
+  }
+
+  if (message.type === RPC_TYPES.GET_PUBLIC_KEY) {
     handleGetPublicKey(sender.tab.id)
       .then(() => sendResponse({ success: true }))
       .catch(err => sendResponse({ success: false, error: err.message }))

@@ -27,22 +27,36 @@ async function sendRequest(message) {
   }
 }
 
+export const RPC_TYPES = {
+  GET_PUBLIC_KEY: 'GET_PUBLIC_KEY',
+  EXT_HANDSHAKE_PAYLOAD: 'EXT_HANDSHAKE_PAYLOAD',
+  GET_PENDING_SETUP_DATA: 'GET_PENDING_SETUP_DATA',
+  GET_VAULT_KEY: 'GET_VAULT_KEY',
+  SET_VAULT_KEY: 'SET_VAULT_KEY',
+  LOCK_VAULT: 'LOCK_VAULT',
+  UPDATE_LOCK_TIMER: 'UPDATE_LOCK_TIMER',
+  REGISTER_CONTENT_SCRIPT: 'REGISTER_CONTENT_SCRIPT',
+  CAPTURE_ACTIVE_TAB: 'CAPTURE_ACTIVE_TAB'
+}
+
 export const rpc = {
   // --- Content Script <-> Background ---
-  getPublicKey: () => sendRequest({ type: 'GET_PUBLIC_KEY' }),
+  getPublicKey: () => sendRequest({ type: RPC_TYPES.GET_PUBLIC_KEY }),
   
-  sendHandshake: (payload) => sendRequest({ type: 'EXT_HANDSHAKE_PAYLOAD', payload }),
+  sendHandshake: (payload) => sendRequest({ type: RPC_TYPES.EXT_HANDSHAKE_PAYLOAD, payload }),
 
   // --- Popup <-> Background ---
-  getPendingSetupData: () => sendRequest({ type: 'GET_PENDING_SETUP_DATA' }),
+  getPendingSetupData: () => sendRequest({ type: RPC_TYPES.GET_PENDING_SETUP_DATA }),
 
-  getVaultKey: () => sendRequest({ type: 'GET_VAULT_KEY' }),
+  getVaultKey: () => sendRequest({ type: RPC_TYPES.GET_VAULT_KEY }),
 
-  setVaultKey: (salt) => sendRequest({ type: 'SET_VAULT_KEY', salt }),
+  setVaultKey: (salt) => sendRequest({ type: RPC_TYPES.SET_VAULT_KEY, salt }),
 
-  lockVault: () => sendRequest({ type: 'LOCK_VAULT' }),
+  lockVault: () => sendRequest({ type: RPC_TYPES.LOCK_VAULT }),
 
-  updateLockTimer: () => sendRequest({ type: 'UPDATE_LOCK_TIMER' }),
+  updateLockTimer: () => sendRequest({ type: RPC_TYPES.UPDATE_LOCK_TIMER }),
 
-  registerContentScript: (url) => sendRequest({ type: 'REGISTER_CONTENT_SCRIPT', url })
+  registerContentScript: (url) => sendRequest({ type: RPC_TYPES.REGISTER_CONTENT_SCRIPT, url }),
+
+  captureActiveTab: () => sendRequest({ type: RPC_TYPES.CAPTURE_ACTIVE_TAB })
 }
