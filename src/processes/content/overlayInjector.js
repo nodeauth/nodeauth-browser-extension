@@ -8,6 +8,19 @@
  * 
  * 注意：Content Script 不依赖外部 chunk（rpc.js），直接内联 sendRequest 以确保单文件可运行。
  */
+import { calculateOverlayPosition, getSplitOtpFields } from './overlayPositioner.js'
+
+// 存储所有当前活跃的更新函数，以便在全局 DOM 发生变动时同步更新所有位置
+const activeUpdaters = new Set()
+
+// 防抖工具函数
+function debounce(func, wait) {
+  let timeout;
+  return function (...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), wait);
+  };
+}
 
 // 内联 RPC 发送函数，避免 Content Script 依赖被 Vite 拆包的 rpc chunk
 async function sendRequest(message) {
@@ -29,12 +42,18 @@ const locales = {
   'zh-CN': {
     autofill_btn_title: 'NodeAuth 快捷填充 2FA 验证码',
     autofill_header: '填写验证码 (NodeAuth)',
-    autofill_submit: '填充并自动提交'
+    autofill_submit: '填充并自动提交',
+    autofill_locked: '🔒 NodeAuth处于锁定状态，点击解锁',
+    autofill_empty: '没有找到匹配的账号',
+    autofill_fetching: '获取中'
   },
   'en-US': {
     autofill_btn_title: 'NodeAuth Quick Fill 2FA Code',
     autofill_header: 'Fill 2FA Code (NodeAuth)',
-    autofill_submit: 'Fill and Auto-Submit'
+    autofill_submit: 'Fill and Auto-Submit',
+    autofill_locked: '🔒 NodeAuth is locked, click to unlock',
+    autofill_empty: 'No matching accounts found',
+    autofill_fetching: 'Fetching...'
   }
 }
 let currentLang = 'en-US'
@@ -76,7 +95,14 @@ export function isOtpInput(input) {
     input.getAttribute('inputmode')
   ].filter(Boolean).join(' ').toLowerCase()
 
-  const otpKeywords = ['otp', 'totp', '2fa', 'authenticator', 'verification', 'code', 'token', 'authcode', '验证码', '动态码', 'app_otp', 'app_totp']
+  const otpKeywords = [
+    '2facode', 'approvals_code', 'mfacode', 'onetimecode', 'onetimepassword',
+    'otc-code', 'otp-code', 'otpcode', 'second-factor', 'security_code',
+    'security code', 'totp', 'totpcode', 'twofa', 'twofactor', 'twofactorcode',
+    'verificationcode', 'verification code', 'otc-confirmation',
+    'code', 'pin', 'otc', 'otp', '2fa', 'mfa',
+    'authenticator', 'verification', 'token', 'authcode', 'app_otp', 'app_totp', '验证码', '动态码'
+  ]
   const hasKeyword = otpKeywords.some(kw => attrStr.includes(kw))
 
   // 3. 校验 maxlength 与类型 (如 6 位或 8 位数字框)
@@ -92,6 +118,15 @@ export function isOtpInput(input) {
   if (hasKeyword) return true
   if (isDigitBox && (type === 'text' || type === 'number' || type === 'tel')) return true
 
+  // 4. 分体式单字符输入框 (Split OTP)
+  const splitFields = getSplitOtpFields(input)
+  if (splitFields && splitFields.length > 1) {
+    // 仅在最后一个输入框上判定为 true，避免在所有格子上都弹图标
+    if (input === splitFields[splitFields.length - 1]) {
+      return true
+    }
+  }
+
   return false
 }
 
@@ -104,6 +139,25 @@ export function dispatchNativeInput(inputElement, code) {
   if (!inputElement || !code) return
 
   try {
+    // 检查是否为分体式输入框
+    const splitFields = getSplitOtpFields(inputElement)
+    if (splitFields && splitFields.length > 0) {
+      // 逐个填入单个字符
+      splitFields.forEach((inp, idx) => {
+        const char = code[idx] || ''
+        inp.focus()
+        const nativeValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set
+        if (nativeValueSetter) {
+          nativeValueSetter.call(inp, char)
+        } else {
+          inp.value = char
+        }
+        inp.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }))
+        inp.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }))
+      })
+      return
+    }
+
     inputElement.focus()
 
     // 核心突破：直接调用 HTMLInputElement 原生 Prototype Setter，绕过 Vue/React 的代理重写
@@ -129,8 +183,8 @@ export function dispatchNativeInput(inputElement, code) {
  * @param {Array} accounts 
  */
 export function mountInlineIcon(input, accounts, isLocked = false) {
-  if (!input || !accounts || input.dataset.nodeauthMounted) return
-  input.dataset.nodeauthMounted = 'true'
+  if (!input || !accounts || input.dataset.nodeauthInjected) return
+  input.dataset.nodeauthInjected = 'true'
 
   // 创建隔离宿主包裹层
   const container = document.createElement('div')
@@ -141,9 +195,21 @@ export function mountInlineIcon(input, accounts, isLocked = false) {
     align-items: center;
     z-index: 2147483647;
     pointer-events: auto;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    inset: auto;
+    overflow: visible;
   `
 
-  // 挂载封闭 Shadow Root，防止网页样式污染
+  // 尝试使用最新的 Popover API，强制置于 top-layer，无视任何原生 <dialog> 或 stacking context
+  try {
+    if (typeof container.showPopover === 'function') {
+      container.setAttribute('popover', 'manual')
+    }
+  } catch (e) { }
+
   const shadow = container.attachShadow({ mode: 'closed' })
 
   const style = document.createElement('style')
@@ -152,7 +218,7 @@ export function mountInlineIcon(input, accounts, isLocked = false) {
       width: 22px;
       height: 22px;
       background: #175DDC;
-      border-radius: 6px;
+      border-radius: 4px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -166,8 +232,9 @@ export function mountInlineIcon(input, accounts, isLocked = false) {
       transform: scale(1.08);
     }
     .shield-btn svg {
-      width: 20px;
-      height: 20px;
+      display: block;
+      width: 100%;
+      height: 100%;
     }
     .overlay-menu {
       position: absolute;
@@ -333,9 +400,19 @@ export function mountInlineIcon(input, accounts, isLocked = false) {
       lockedItem.className = 'menu-item'
       lockedItem.style.justifyContent = 'center'
       lockedItem.style.color = '#64748b'
+      lockedItem.style.cursor = 'pointer'
       const span = document.createElement('span')
-      span.textContent = '🔒 请先点击扩展图标解锁 NodeAuth'
+      span.textContent = t('autofill_locked')
       lockedItem.appendChild(span)
+
+      lockedItem.addEventListener('click', (e) => {
+        e.stopPropagation()
+        menu.classList.remove('show')
+        sendRequest({ type: 'OPEN_POPUP' }).catch(err => {
+          console.warn('[NodeAuth] 无法自动弹起窗口，请手动点击浏览器右上角的扩展图标', err)
+        })
+      })
+
       menu.appendChild(lockedItem)
       return
     }
@@ -346,7 +423,7 @@ export function mountInlineIcon(input, accounts, isLocked = false) {
       emptyItem.style.justifyContent = 'center'
       emptyItem.style.color = '#64748b'
       const span = document.createElement('span')
-      span.textContent = '没有找到匹配的账号'
+      span.textContent = t('autofill_empty')
       emptyItem.appendChild(span)
       menu.appendChild(emptyItem)
       return
@@ -356,19 +433,19 @@ export function mountInlineIcon(input, accounts, isLocked = false) {
       const item = document.createElement('div')
       item.className = 'menu-item'
 
-      const formattedCode = acc.code ? (acc.code.length === 6 ? `${acc.code.slice(0, 3)} ${acc.code.slice(3)}` : acc.code) : '获取中'
+      const formattedCode = acc.code ? (acc.code.length === 6 ? `${acc.code.slice(0, 3)} ${acc.code.slice(3)}` : acc.code) : t('autofill_fetching')
 
       const infoDiv = document.createElement('div')
       infoDiv.className = 'account-info'
-      
+
       const accountSpan = document.createElement('span')
       accountSpan.className = 'account-name'
       accountSpan.textContent = acc.account || acc.service || 'NodeAuth'
-      
+
       const serviceSpan = document.createElement('span')
       serviceSpan.className = 'service-name'
       serviceSpan.textContent = acc.service || 'NodeAuth'
-      
+
       infoDiv.appendChild(accountSpan)
       infoDiv.appendChild(serviceSpan)
 
@@ -432,7 +509,7 @@ export function mountInlineIcon(input, accounts, isLocked = false) {
 
     const paths = menu.querySelectorAll('.timer-path')
     const texts = menu.querySelectorAll('.timer-text')
-    
+
     paths.forEach(p => p.setAttribute('stroke-dashoffset', pct))
     texts.forEach(t => {
       // 避免重复设置导致文本频繁闪烁
@@ -446,7 +523,7 @@ export function mountInlineIcon(input, accounts, isLocked = false) {
     }
   }
 
-  setInterval(updateTimer, 1000)
+  const timerId = setInterval(updateTimer, 1000)
 
   btn.addEventListener('click', async (e) => {
     e.stopPropagation()
@@ -467,27 +544,83 @@ export function mountInlineIcon(input, accounts, isLocked = false) {
   shadow.appendChild(style)
   shadow.appendChild(btn)
   shadow.appendChild(menu)
-
-  // 定位计算：避让 Bitwarden 右侧图标 (在 input 内部往左退避 54px，完美并存)
+  // 定位计算：完全复刻 Bitwarden 算法
   function updatePosition() {
-    const rect = input.getBoundingClientRect()
-    if (!rect.width || !rect.height) return
-    container.style.top = `${window.scrollY + rect.top + (rect.height - 22) / 2}px`
-    container.style.left = `${window.scrollX + rect.right - 58}px`
+    if (!input.isConnected) {
+      container.remove()
+      clearInterval(timerId)
+      activeUpdaters.delete(debouncedUpdatePosition)
+      return
+    }
+
+    const pos = calculateOverlayPosition(input)
+    if (!pos) {
+      if (container.hasAttribute('popover')) {
+        try { if (container.matches(':popover-open')) container.hidePopover() } catch (e) { }
+      } else {
+        container.style.display = 'none'
+      }
+      return
+    }
+
+    // 应用容器位置 (如果启用了 Popover，则坐标相对于视口，需要减去滚动偏移)
+    if (container.hasAttribute('popover')) {
+      container.style.top = `${pos.top - window.scrollY}px`
+      container.style.left = `${pos.left - window.scrollX}px`
+      try {
+        if (!container.matches(':popover-open')) {
+          container.showPopover()
+        }
+      } catch (e) { }
+    } else {
+      container.style.display = 'inline-flex'
+      container.style.top = `${pos.top}px`
+      container.style.left = `${pos.left}px`
+    }
+
+    // 应用动态大小
+    btn.style.width = `${Math.max(16, pos.width)}px`
+    btn.style.height = `${Math.max(16, pos.height)}px`
+    // 移除对 btnSvg 的硬编码设置，让其完全由 CSS 控制大小，以保证内边距
   }
+
+  // 创建一个带有防抖的位置更新函数
+  const debouncedUpdatePosition = debounce(updatePosition, 50)
+  activeUpdaters.add(debouncedUpdatePosition)
 
   // 恢复图标显示的逻辑：当用户再次点击、聚焦或修改输入框时，恢复图标
   const restoreIcon = () => {
+    updatePosition()
     if (btn.style.display === 'none') {
       btn.style.display = 'flex'
     }
   }
+
+  const handleBlur = () => {
+    debouncedUpdatePosition()
+  }
+
   input.addEventListener('focus', restoreIcon)
+  input.addEventListener('blur', handleBlur)
   input.addEventListener('click', restoreIcon)
   input.addEventListener('input', restoreIcon)
 
+  // 监听输入框尺寸变化（解决 SPA 框架渲染延迟导致宽高为 0 的问题）
+  if (window.ResizeObserver) {
+    const resizeObserver = new ResizeObserver(() => updatePosition())
+    resizeObserver.observe(input)
+  }
+
+  // 必须先将 container 挂载到 DOM 树中，后续的 showPopover() 才不会抛出 InvalidStateError
+  const rootElement = document.body || document.documentElement
+  rootElement.appendChild(container)
   updatePosition()
-  document.body.appendChild(container)
+
+  // 如果当前输入框恰好已经自动获得了焦点，主动触发一次恢复逻辑
+  if (document.activeElement === input) {
+    restoreIcon()
+  }
+
   window.addEventListener('resize', updatePosition)
   window.addEventListener('scroll', updatePosition, true)
 }
@@ -513,20 +646,40 @@ export async function initOverlayInjector() {
     // 如果没有账号且没有被锁定，说明当前网站真的没有对应账号，那么就不用注入了
     if ((!res.accounts || !res.accounts.length) && !res.locked) return
 
+    // 深度查找所有的 input，穿透 Shadow DOM
+    function querySelectorAllDeep(selector, root = document) {
+      const result = Array.from(root.querySelectorAll(selector))
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, {
+        acceptNode: (node) => (node.shadowRoot ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP)
+      })
+      while (walker.nextNode()) {
+        result.push(...querySelectorAllDeep(selector, walker.currentNode.shadowRoot))
+      }
+      return result
+    }
+
     function scanAndMount() {
-      const inputs = document.querySelectorAll('input')
+      const inputs = querySelectorAllDeep('input')
       inputs.forEach(input => {
         if (isOtpInput(input)) {
           mountInlineIcon(input, res.accounts || [], res.locked)
         }
       })
+
+      // 全局 DOM 变动时（比如 Bitwarden 延迟 1 秒注入了它的图标），同步更新所有已挂载图标的位置
+      activeUpdaters.forEach(update => update())
     }
+
+    // 引入防抖，防止 SPA 框架的频繁渲染导致严重的 CPU 占用
+    const debouncedScanAndMount = debounce(scanAndMount, 300)
 
     scanAndMount()
 
     // 观察动态 DOM 注入 (针对 SPA 路由)
-    const observer = new MutationObserver(() => scanAndMount())
-    observer.observe(document.body, { childList: true, subtree: true })
+    const observer = new MutationObserver(() => debouncedScanAndMount())
+    // 兼容浏览器极速初始化时 document.body 可能为 null 的问题
+    const targetNode = document.body || document.documentElement
+    observer.observe(targetNode, { childList: true, subtree: true })
   } catch (e) {
     // 静默降级，不影响网页正常功能
   }

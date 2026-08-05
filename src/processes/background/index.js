@@ -300,6 +300,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true
   }
 
+  if (message.type === 'OPEN_POPUP') {
+    if (chrome.action && chrome.action.openPopup) {
+      // 仅在 Chrome 118+ 支持，且需要由真实的用户交互事件触发
+      chrome.action.openPopup()
+        .then(() => sendResponse({ success: true }))
+        .catch(err => sendResponse({ success: false, error: err.message }))
+    } else {
+      sendResponse({ success: false, error: '当前浏览器版本不支持此 API，请手动点击扩展图标' })
+    }
+    return true
+  }
+
   // --- 会话锁控通信 ---
 
   if (message.type === 'GET_VAULT_KEY') {

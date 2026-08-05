@@ -92,30 +92,57 @@ export function getBrandFromDomain(domain) {
 export function isServiceMatchDomain(service, currentUrl) {
   if (!service || !currentUrl) return false
 
+  let pageHostname = ''
+  try {
+    pageHostname = new URL(currentUrl).hostname.toLowerCase()
+  } catch (e) {
+    return false
+  }
+
   const pageDomain = getDomainFromUrl(currentUrl)
   if (!pageDomain) return false
 
   const pageBrand = getBrandFromDomain(pageDomain)
   const cleanService = service.toLowerCase().trim()
 
-  // Tier 1: 物理根域名/包含匹配 (如 service="github.com" 或 service 包含 pageDomain)
-  if (cleanService === pageDomain || cleanService.includes(pageDomain)) {
+  // Tier 1: 物理根域名比对
+  // 1.1 精确匹配或子域名匹配
+  if (cleanService === pageHostname || pageHostname.endsWith('.' + cleanService)) {
+    return true
+  }
+  if (cleanService === pageDomain || cleanService.endsWith('.' + pageDomain)) {
     return true
   }
 
-  // Tier 2: 品牌词标准化模糊匹配 (如 service="GitHub", pageBrand="github")
+  // 1.2 如果 service 是一个带域名的网址或字符串，解析其 domain 后再做精确比对
+  if (cleanService.includes('.')) {
+    const serviceUrl = cleanService.startsWith('http') ? cleanService : `https://${cleanService}`
+    const serviceDomain = getDomainFromUrl(serviceUrl)
+    if (serviceDomain && serviceDomain === pageDomain) return true
+    try {
+      const serviceHostname = new URL(serviceUrl).hostname
+      if (pageHostname === serviceHostname || pageHostname.endsWith('.' + serviceHostname)) {
+        return true
+      }
+    } catch(e) {}
+  }
+
+  // Tier 2: 品牌词标准化精确 Token 匹配 (防止短词 substring 误伤，如 "pp" 匹配 "app")
   if (pageBrand && pageBrand.length >= 2) {
-    // 处理带说明的 service, 如 "GitHub (Work)" -> "github work"
-    const normalizedService = cleanService.replace(/[\(\)\-\_]/g, ' ')
-    if (normalizedService.includes(pageBrand)) {
+    // 将 service 拆分为 token 数组 (e.g. "GitHub (Work)" -> ["github", "work"])
+    const tokens = cleanService.replace(/[\(\)\-\_\.]/g, ' ').split(/\s+/)
+    if (tokens.includes(pageBrand)) {
       return true
     }
   }
 
-  // Tier 3: 别名字典映射匹配
-  const mappedDomain = SERVICE_DOMAIN_MAP[cleanService]
-  if (mappedDomain && (mappedDomain === pageDomain || mappedDomain.includes(pageDomain))) {
-    return true
+  // Tier 3: 常见服务别名字典映射匹配
+  const baseService = cleanService.replace(/[\(\)\-\_\.]/g, ' ').split(/\s+/)[0]
+  const mappedDomain = SERVICE_DOMAIN_MAP[baseService] || SERVICE_DOMAIN_MAP[cleanService]
+  if (mappedDomain) {
+    if (mappedDomain === pageDomain || mappedDomain === pageHostname || pageHostname.endsWith('.' + mappedDomain)) {
+      return true
+    }
   }
 
   return false
