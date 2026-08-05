@@ -20,6 +20,30 @@ const tabPrivateKeys = new Map()
 // 不再使用 manifest 静态全域注入，改为按需精准匹配用户实例域名
 
 /**
+ * 尝试跨浏览器自动弹起扩展主界面
+ * 支持 Firefox (MV3) 与 Chrome (118+)
+ * 失败时内部安全捕获，不抛出异常
+ * @returns {Promise<boolean>} 是否成功弹起
+ */
+async function attemptOpenExtensionPopup() {
+  try {
+    // 优先尝试 Firefox 标准扩展 API
+    if (typeof browser !== 'undefined' && browser.action && browser.action.openPopup) {
+      await browser.action.openPopup()
+      return true
+    }
+    // Chromium 系浏览器 (Chrome, Edge, Brave 等)
+    if (chrome.action && chrome.action.openPopup) {
+      await chrome.action.openPopup()
+      return true
+    }
+  } catch (e) {
+    console.debug('[NodeAuth: Background] Cannot auto-open popup:', e)
+  }
+  return false
+}
+
+/**
  * 为指定实例 URL 动态注册 Content Script
  * 仅匹配该域名，不影响其他任何网站
  */
@@ -48,10 +72,10 @@ async function registerContentScript(instanceUrl) {
         js: ['processes/content/authBridge.js'],
         runAt: 'document_start'
       }])
-      console.log(`[Background] Content Script 已动态注册至: ${matches.join(', ')}`)
+      console.log(`[NodeAuth: Background] Content Script dynamically registered to: ${matches.join(', ')}`)
     }
   } catch (e) {
-    console.warn('[Background] Content Script 动态注册失败:', e)
+    console.warn('[NodeAuth: Background] Content Script dynamic registration failed:', e)
   }
 }
 
@@ -174,7 +198,7 @@ export async function updateBadgeForActiveTab() {
       chrome.action.setBadgeText({ text: '' })
     }
   } catch (e) {
-    console.warn('[Background] Update badge failed:', e)
+    console.warn('[NodeAuth: Background] Update badge failed:', e)
     chrome.action.setBadgeText({ text: '' })
   }
 }
@@ -249,7 +273,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 }
               }
             } catch (e) {
-              console.warn('[Background] Failed to generate live TOTP:', e)
+              console.warn('[NodeAuth: Background] Failed to generate live TOTP:', e)
               code = 'ERR'
             }
             return {
@@ -279,7 +303,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     handleHandshake(message.payload, sender.tab.id, sender.tab.url || sender.url)
       .then(() => sendResponse({ success: true }))
       .catch(err => {
-        console.error('[Background] 握手处理失败:', err)
+        console.error('[NodeAuth: Background] Handshake processing failed:', err)
         sendResponse({ success: false, error: err.message })
       })
     return true // 保持通道异步
@@ -372,7 +396,7 @@ chrome.runtime.onConnect.addListener((port) => {
 
       if (delayMode === '0') {
         clearLockState()
-        console.log('[Background] Popup closed, immediate lock triggered.')
+        console.log('[NodeAuth: Background] Popup closed, immediate lock triggered.')
       } else {
         restartAutoLockTimer()
       }
@@ -405,7 +429,7 @@ async function clearLockState() {
   await chrome.storage.session.remove(['sys:sec:active_salt', 'sys:sec:vault_summary'])
   await chrome.alarms.clear('autoLockTimer')
   chrome.action.setBadgeText({ text: '' })
-  console.log('[Background] Vault is now locked (Salt and summary cleared from session memory).')
+  console.log('[NodeAuth: Background] Vault is now locked (Salt and summary cleared from session memory).')
 }
 
 // 监听 alarms
@@ -414,7 +438,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
     await clearLockState()
   } else if (alarm.name === 'clearPendingSetupData') {
     await chrome.storage.session.remove('sys:sec:pending_setup')
-    console.warn('[Background] Pending setup data expired and cleared from session.')
+    console.warn('[NodeAuth: Background] Pending setup data expired and cleared from session.')
   }
 })
 
@@ -441,7 +465,7 @@ async function handleGetPublicKey(tabId) {
           configurable: false,
           enumerable: false
         })
-        console.debug('[NodeAuth Extension] 公钥已通过底层隔离特权成功注入 MAIN 世界！')
+        console.debug('[NodeAuth: Background] Page context initialized.')
       } catch (e) {
         // 如果重复注入或失败
       }
@@ -455,7 +479,7 @@ async function handleHandshake(payload, tabId, senderUrl) {
   // 1. 获取 Background 内存中的私钥
   const extPrivateKey = tabPrivateKeys.get(tabId)
   if (!extPrivateKey) {
-    throw new Error('未找到当前页面的配对私钥，可能是页面刷新导致，请重试')
+    throw new Error('Pairing private key not found for current page, possibly due to page refresh. Please try again.')
   }
 
   // 阅后即焚，防止重放攻击
@@ -472,10 +496,10 @@ async function handleHandshake(payload, tabId, senderUrl) {
   const { token, deviceSalt } = decryptedData
 
   if (!token || !deviceSalt) {
-    throw new Error('解密成功但载荷格式错误，缺少 token 或 deviceSalt')
+    throw new Error('Decryption successful but invalid payload format: missing token or deviceSalt')
   }
 
-  console.log('[Background] 成功提取 Master Key 和 Extension Session Token.')
+  console.log('[NodeAuth: Background] Successfully established secure pairing session.')
 
   // 🛡️ 架构加固：敏感数据仅存入 Session，不落盘，防止物理读取风险
   await chrome.storage.session.set({
@@ -497,7 +521,7 @@ async function handleHandshake(payload, tabId, senderUrl) {
       instanceUrl = new URL(senderUrl).origin
     }
   } catch (e) {
-    console.warn('[Background] 解析 sender URL 失败:', e)
+    console.warn('[NodeAuth: Background] Failed to parse sender URL:', e)
   }
 
   // 仅在持久化层记录状态位与 URL，不记录密钥本身
@@ -511,7 +535,11 @@ async function handleHandshake(payload, tabId, senderUrl) {
     await registerContentScript(instanceUrl)
   }
 
-  // 尝试弹窗通知用户
+  // 尝试自动弹起扩展主界面（需要 Chrome 118+，Firefox MV3，且要求用户手势传递成功）
+  const opened = await attemptOpenExtensionPopup()
+  if (opened) return // 如果成功弹起，就不需要再发系统通知打扰用户了
+
+  // 尝试弹窗通知用户 (回退方案)
   try {
     chrome.notifications.create({
       type: 'basic',
@@ -527,4 +555,51 @@ async function handleHandshake(payload, tabId, senderUrl) {
 // 自动清理内存垃圾
 chrome.tabs.onRemoved.addListener((tabId) => {
   tabPrivateKeys.delete(tabId)
+})
+
+// === 权限请求断点续传（解决部分系统上 Popup 失去焦点被强杀的问题） ===
+chrome.permissions.onAdded.addListener(async (permissions) => {
+  if (!permissions.origins || permissions.origins.length === 0) return
+
+  const data = await chrome.storage.local.get(['sys:state:pairing_pending_url', 'sys:state:autofill_pending'])
+  
+  // 1. 处理 NodeAuth 实例配对授权的断点续传
+  const pendingUrl = data['sys:state:pairing_pending_url']
+  if (pendingUrl) {
+    const origin = new URL(pendingUrl).origin
+    // 确认新增加的权限包含该实例的域名
+    if (permissions.origins.some(o => o.startsWith(origin) || origin.startsWith(o.replace('/*', '')))) {
+      // 清除线索，防止重复触发
+      await chrome.storage.local.remove('sys:state:pairing_pending_url')
+      
+      // 继续之前被打断的流程：注册内容脚本并打开配对 Tab
+      try {
+        await registerContentScript(pendingUrl)
+        const deviceId = crypto.randomUUID()
+        const authUrl = `${pendingUrl}/login?source=extension&ext_device_id=${deviceId}`
+        chrome.tabs.create({ url: authUrl })
+      } catch (e) {
+        console.error('[NodeAuth: Background] Failed to resume pairing flow:', e)
+      }
+    }
+  }
+
+  // 2. 处理全局验证码一键填充 (<all_urls>) 的断点续传与自动唤起
+  if (data['sys:state:autofill_pending']) {
+    if (permissions.origins.includes('<all_urls>') || permissions.origins.includes('*://*/*')) {
+      await chrome.storage.local.remove('sys:state:autofill_pending')
+      // 授予权限成功，在后台强制写入开启状态
+      const currentSettings = await chrome.storage.local.get(['sys:ui:settings'])
+      const updatedSettings = Object.assign({}, currentSettings['sys:ui:settings'], { inlineAutofill: true })
+      
+      await chrome.storage.local.set({ 
+        'sys:ui:inline_autofill': true,
+        'sys:ui:settings': updatedSettings, // 同步更新复合状态对象，防冲刷其他设置项
+        'sys:ui:resume_view': 'settings' // 自动断点恢复至设置页
+      })
+      
+      // 尝试自动恢复展开 Popup
+      await attemptOpenExtensionPopup()
+    }
+  }
 })

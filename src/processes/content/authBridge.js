@@ -14,7 +14,7 @@ async function sendRequest(message) {
     if (response.success === false && response.error) throw new Error(response.error)
     return response
   } catch (error) {
-    console.error(`[RPC Error] Failed to send ${message.type}:`, error)
+    console.error(`[NodeAuth: RPC] Failed to send ${message.type}:`, error)
     throw error
   }
 }
@@ -36,7 +36,7 @@ async function init() {
       
       // 严格校验 origin
       if (event.origin !== window.location.origin) {
-        console.warn(`[NodeAuth Extension] 忽略非法 origin: ${event.origin}`)
+        console.warn(`[NodeAuth: Content] Ignoring invalid origin: ${event.origin}`)
         return
       }
 
@@ -55,16 +55,16 @@ async function init() {
             iv
           }
         })
-        console.debug('[NodeAuth Extension] 握手成功！Master Key 已安全落锁。')
+        console.debug('[NodeAuth: Content] Handshake successful. Session state synchronized.')
 
       } catch (err) {
-        console.error('[NodeAuth Extension] 转发消息失败:', err)
+        console.error('[NodeAuth: Content] Failed to forward message:', err)
         _handshakeDone = false
       }
     })
 
   } catch (err) {
-    console.error('[NodeAuth Extension] Content Script 初始化异常:', err)
+    console.error('[NodeAuth: Content] Content Script initialization error:', err)
   }
 }
 

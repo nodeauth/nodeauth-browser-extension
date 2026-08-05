@@ -40,7 +40,7 @@
   },
   "vault": {
     "search_placeholder": "Search accounts...",
-    "current_site": "Current Site",
+    "suggestions": "Suggestions",
     "loading": "Loading...",
     "empty": "No accounts found",
     "no_match": "No matching accounts",

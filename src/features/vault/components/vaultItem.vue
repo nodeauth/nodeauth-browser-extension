@@ -37,7 +37,7 @@
           <circle class="bg" stroke="var(--border-color-dark)" stroke-width="2" fill="transparent" r="12" cx="15" cy="15" />
           <circle 
             class="progress" 
-            stroke="var(--primary-text)" 
+            :stroke="item.remaining <= 5 ? 'var(--error-color)' : 'var(--primary-text)'" 
             stroke-width="2" 
             fill="transparent" 
             r="12" 
@@ -46,7 +46,7 @@
             :style="{ strokeDashoffset: progressOffset(item.percentage) }"
           />
         </svg>
-        <span class="progress-text" :class="{ 'text-warning': item.remaining < 5 }">{{ item.remaining }}</span>
+        <span class="progress-text">{{ item.remaining }}</span>
       </div>
       
       <!-- 更多操作 -->
@@ -249,9 +249,6 @@ function progressOffset(percentage) {
   font-size: 10px;
   font-weight: 700;
   color: var(--primary-text);
-}
-.progress-text.text-warning {
-  color: var(--error-color);
 }
 
 /* 操作按钮与菜单 */

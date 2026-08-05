@@ -74,25 +74,38 @@ async function startPairing() {
 
   try {
     const origin = new URL(url).origin
+
+    // 1. 同步发起存储写入（不使用 await），防止在 Firefox 中丢失用户手势 (User Gesture) 上下文
+    // 写入断点标记，防止请求权限原生弹窗把 Popup 强杀后丢失状态
+    chrome.storage.local.set({ 
+      'sys:state:instance_url': url,
+      'sys:state:pairing_pending_url': url 
+    })
+
+    // 2. 趁着手势上下文还在，立刻请求权限
+    // (如果已有权限，Chrome/Firefox 会直接静默返回 true，不会打扰用户)
     const granted = await chrome.permissions.request({
       origins: [`${origin}/*`]
     })
 
     if (!granted) {
+      chrome.storage.local.remove('sys:state:pairing_pending_url')
       throw new Error('User denied permissions')
     }
 
-    await chrome.storage.local.set({ 'sys:state:instance_url': url })
+    // 3. 授权成功（或早已有权限）。
+    // 如果刚才弹出了原生授权框，Popup 极有可能已被强杀，将由 Background 接力。
+    // 如果代码能走到这里，说明 Popup 并没有被强制关闭，由我们自己继续完成后续逻辑。
+    // 清除断点标记，防止产生副作用
+    chrome.storage.local.remove('sys:state:pairing_pending_url')
 
-    // 主动通知 Background 立即精准注入桥接脚本，修复时序漏洞
     await rpc.registerContentScript(url)
-
     const deviceId = crypto.randomUUID()
-    const authUrl = `${url}/login?source=extension&ext_device_id=${deviceId}`
-    chrome.tabs.create({ url: authUrl })
+    chrome.tabs.create({ url: `${url}/login?source=extension&ext_device_id=${deviceId}` })
     window.close()
+
   } catch (e) {
-    console.error('Failed to open pairing page:', e)
+    console.error('[NodeAuth: Settings] Failed to open pairing page:', e)
     throw e // 抛出错误让外层能捕捉
   }
 }

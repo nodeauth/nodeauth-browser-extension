@@ -18,7 +18,7 @@ async function sendRequest(message) {
     }
     return response
   } catch (error) {
-    console.error(`[RPC Error] Failed to send ${message.type}:`, error)
+    console.error(`[NodeAuth: RPC] Failed to send ${message.type}:`, error)
     // 可以在这里统一处理“扩展上下文失效”导致的刷新
     if (error.message.includes('Extension context invalidated')) {
       // 强制刷新页面或进行补救

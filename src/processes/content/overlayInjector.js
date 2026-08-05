@@ -172,7 +172,7 @@ export function dispatchNativeInput(inputElement, code) {
     inputElement.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }))
     inputElement.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }))
   } catch (e) {
-    console.warn('[NodeAuth Overlay] Auto-fill failed:', e)
+    console.warn('[NodeAuth: Overlay] Auto-fill failed:', e)
     inputElement.value = code
   }
 }
@@ -409,7 +409,7 @@ export function mountInlineIcon(input, accounts, isLocked = false) {
         e.stopPropagation()
         menu.classList.remove('show')
         sendRequest({ type: 'OPEN_POPUP' }).catch(err => {
-          console.warn('[NodeAuth] 无法自动弹起窗口，请手动点击浏览器右上角的扩展图标', err)
+          console.warn('[NodeAuth: Overlay] Failed to auto-open popup, please click the extension icon manually', err)
         })
       })
 
@@ -497,7 +497,7 @@ export function mountInlineIcon(input, accounts, isLocked = false) {
         updateTimer()
       }
     } catch (err) {
-      console.warn('[NodeAuth] Failed to refresh live TOTP:', err)
+      console.warn('[NodeAuth: Overlay] Failed to refresh live TOTP:', err)
     }
   }
 
@@ -510,7 +510,10 @@ export function mountInlineIcon(input, accounts, isLocked = false) {
     const paths = menu.querySelectorAll('.timer-path')
     const texts = menu.querySelectorAll('.timer-text')
 
-    paths.forEach(p => p.setAttribute('stroke-dashoffset', pct))
+    paths.forEach(p => {
+      p.setAttribute('stroke-dashoffset', pct)
+      p.style.stroke = remaining <= 5 ? '#ef4444' : ''
+    })
     texts.forEach(t => {
       // 避免重复设置导致文本频繁闪烁
       if (t.textContent !== String(remaining)) {

@@ -16,10 +16,10 @@
       <div 
         v-if="(currentSiteAccounts?.length || 0) > 0"
         class="category-item current-site-tag"
-        :class="{ active: selectedCategory === 'current_site' }"
-        @click="selectedCategory = 'current_site'"
+        :class="{ active: selectedCategory === 'suggestions' }"
+        @click="selectedCategory = 'suggestions'"
       >
-        {{ $t('vault.current_site') }} <span class="count">({{ currentSiteAccounts?.length || 0 }})</span>
+        {{ $t('vault.suggestions') }} <span class="count">({{ currentSiteAccounts?.length || 0 }})</span>
       </div>
       <div 
         class="category-item" 

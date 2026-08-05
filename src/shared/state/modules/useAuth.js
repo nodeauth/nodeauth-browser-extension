@@ -18,9 +18,18 @@ export function useAuth() {
   
   // 初始化设置与状态
   async function init() {
+    // 1. 最先读取断点续传恢复页面标记，确保在页面结束 loading 之前路由状态已就绪，避免闪烁
+    const resumeData = await chrome.storage.local.get(['sys:ui:resume_view'])
+    if (resumeData['sys:ui:resume_view']) {
+      currentView.value = resumeData['sys:ui:resume_view']
+      chrome.storage.local.remove('sys:ui:resume_view')
+    }
+
+    // 2. 加载设置与校验状态（checkState 会将 appState 设为 unlocked 并触发界面渲染）
     await loadSettings()
     await checkState()
-    // 建立长连接以便后台感知弹出层关闭（用于立即锁定模式）
+    
+    // 3. 建立长连接以便后台感知弹出层关闭（用于立即锁定模式）
     chrome.runtime.connect({ name: 'popup' })
   }
 
@@ -46,7 +55,7 @@ export function useAuth() {
         return
       }
     } catch (e) {
-      console.warn('Failed to get vault key from background:', e)
+      console.warn('[NodeAuth: Auth] Failed to get vault key from background:', e)
     }
 
     if (data['sys:state:status'] === 'ready_to_lock') {
@@ -147,7 +156,7 @@ export function useAuth() {
     try {
       await rpc.lockVault()
     } catch (e) {
-      console.warn('Background lock request failed:', e)
+      console.warn('[NodeAuth: Auth] Background lock request failed:', e)
     }
   }
 
@@ -181,6 +190,9 @@ export function useAuth() {
       confirmText: t('settings.reset_ext'),
       action: async () => {
         await chrome.storage.local.clear()
+        if (chrome.storage.session) {
+          await chrome.storage.session.clear()
+        }
         try {
           await rpc.lockVault()
         } catch(e){}

@@ -84,7 +84,7 @@ export function useUI() {
         }, delay)
       }
     } catch (e) {
-      console.error('[Clipboard] Copy failed:', e)
+      console.error('[NodeAuth: Clipboard] Copy failed:', e)
     }
   }
 

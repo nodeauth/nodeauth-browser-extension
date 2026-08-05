@@ -35,7 +35,7 @@ async function getConfig() {
   const token = data['sys:auth:extension_token']
 
   if (!instanceUrl || !token) {
-    throw new Error('未找到 API 实例地址或授权 Token，请尝试重新配对。')
+    throw new Error('API instance URL or auth token not found, please try pairing again.')
   }
 
   _cachedConfig = { instanceUrl, token }
@@ -64,11 +64,11 @@ async function request(path, options = {}) {
       try {
         await rpc.lockVault()
       } catch (e) {
-        console.warn('[API] 401 联动锁定失败:', e)
+        console.warn('[NodeAuth: API] 401 sync lock failed:', e)
       }
       throw new Error('AUTH_EXPIRED')
     }
-    throw new Error(`请求失败: ${response.status}`)
+    throw new Error(`Request failed with status: ${response.status}`)
   }
 
   // 安全解析：防止 204 等空响应触发 SyntaxError
@@ -97,7 +97,7 @@ export async function fetchVaultData(search = '') {
 
     return []
   } catch (e) {
-    console.error('[API] fetchVaultData error:', e)
+    console.error('[NodeAuth: API] fetchVaultData error:', e)
     throw e
   }
 }
@@ -114,11 +114,11 @@ export async function addVaultAccount(data) {
     })
 
     if (!result.success) {
-      throw new Error(result.error || '添加失败')
+      throw new Error(result.error || 'Failed to add vault account')
     }
     return result.item
   } catch (e) {
-    console.error('[API] addVaultAccount error:', e)
+    console.error('[NodeAuth: API] addVaultAccount error:', e)
     throw e
   }
 }

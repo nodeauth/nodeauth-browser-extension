@@ -40,7 +40,7 @@
   },
   "vault": {
     "search_placeholder": "搜索账号...",
-    "current_site": "当前网站",
+    "suggestions": "自动匹配",
     "loading": "正在拉取...",
     "empty": "暂无账号数据",
     "no_match": "未找到匹配的账号",

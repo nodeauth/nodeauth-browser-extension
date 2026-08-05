@@ -119,14 +119,24 @@ const handleAutofillChange = async (e) => {
   const isTurningOn = e.target.value === 'true'
   if (isTurningOn) {
     try {
+      // 给 Background 写入断点续传标记，防止请求权限原生弹窗把 Popup 强杀后丢失状态
+      // 注意：在此不能使用 await，必须同步发起写入，否则会丢失 Firefox 的用户手势 (User Gesture) 上下文
+      chrome.storage.local.set({ 'sys:state:autofill_pending': true })
+      
+      // 趁着手势上下文还在，立刻请求权限
+      // (如果已有权限，Chrome/Firefox 会静默返回 true)
       const granted = await chrome.permissions.request({ origins: ['<all_urls>'] })
+      
+      // 如果没被强杀，主动清除断点标记
+      chrome.storage.local.remove('sys:state:autofill_pending')
+
       if (granted) {
         settings.value.inlineAutofill = true
       } else {
         e.target.value = 'false'
       }
     } catch (err) {
-      console.warn('[NodeAuth] Permission request failed:', err)
+      console.warn('[NodeAuth: Settings] Permission request failed:', err)
       e.target.value = 'false'
     }
   } else {

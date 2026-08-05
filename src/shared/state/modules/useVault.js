@@ -53,7 +53,7 @@ export function useVault() {
         item.account.toLowerCase().includes(searchQuery.value.toLowerCase())
       
       let matchCategory = true
-      if (selectedCategory.value === 'current_site') {
+      if (selectedCategory.value === 'suggestions') {
         matchCategory = item.service && isServiceMatchDomain(item.service, activeTabUrl.value)
       } else if (selectedCategory.value) {
         matchCategory = item.category === selectedCategory.value
@@ -73,7 +73,7 @@ export function useVault() {
     if (!instanceUrl.value) return
     const maskingKeys = getAllMemoryMaskingKeys()
     if (!maskingKeys || maskingKeys.length === 0) {
-      console.warn('[Vault] No masking key found, skipping load.')
+      console.warn('[NodeAuth: Vault] No masking key found, skipping load.')
       await lockVault()
       return
     }
@@ -88,7 +88,7 @@ export function useVault() {
             item.decryptedSecret = await unmaskSecret(item.secret, maskingKeys)
             decryptedList.push(item)
           } catch (e) {
-            console.error(`[Vault] Decrypt failed for ${item.service}:`, e)
+            console.error(`[NodeAuth: Vault] Decrypt failed for ${item.service}:`, e)
           }
         }
       }
@@ -116,11 +116,13 @@ export function useVault() {
         await chrome.storage.session.set({ 'sys:sec:vault_summary': vaultSummary })
       }
       await initActiveTabUrl()
-      if (currentSiteAccounts.value.length > 0 && (!selectedCategory.value || selectedCategory.value === 'current_site')) {
-        selectedCategory.value = 'current_site'
+      if (currentSiteAccounts.value.length > 0 && (!selectedCategory.value || selectedCategory.value === 'suggestions')) {
+        selectedCategory.value = 'suggestions'
+      } else if (!selectedCategory.value) {
+        selectedCategory.value = ''
       }
     } catch (e) {
-      console.error('[Vault] loadVault error:', e)
+      console.error('[NodeAuth: Vault] loadVault error:', e)
       if (e.message === 'AUTH_EXPIRED') {
         // 清理持久化凭证，防止陷入重启后依然提示输入密码的僵尸状态
         await chrome.storage.local.remove([
@@ -190,7 +192,7 @@ export function useVault() {
         }
       }
     } catch (e) {
-      console.error('[Vault] HOTP increment failed:', e)
+      console.error('[NodeAuth: Vault] HOTP increment failed:', e)
     } finally {
       const next = new Set(incrementingIds.value)
       next.delete(vaultItem.id)
@@ -251,7 +253,7 @@ export function useVault() {
         }
       }
     } catch (e) {
-      console.warn('[Vault] Query active tab failed:', e)
+      console.warn('[NodeAuth: Vault] Query active tab failed:', e)
     }
   }
 

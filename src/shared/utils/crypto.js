@@ -99,7 +99,7 @@ export async function decryptWithPin(encryptedBase64, pin) {
 
         return new TextDecoder().decode(decrypted);
     } catch (e) {
-        throw new Error('解密失败，可能是 PIN 码错误或数据损坏');
+        throw new Error('Decryption failed, possibly incorrect PIN or corrupted data');
     }
 }
 
@@ -127,7 +127,7 @@ export async function unmaskSecret(maskedData, maskingKeyBufferOrArray) {
     const combined = new Uint8Array(base64ToArrayBuffer(payload));
 
     if (combined.byteLength < 12) {
-        throw new Error('无效的密文长度');
+        throw new Error('Invalid ciphertext length');
     }
 
     const iv = combined.slice(0, 12);

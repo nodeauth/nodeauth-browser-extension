@@ -103,7 +103,7 @@ export async function generateToken({ secret, digits = 6, period = 30, isSteam =
         }
         return dynamicTruncation(hmac, digits);
     } catch (e) {
-        console.error('[TOTP] Generate failed:', e);
+        console.error('[NodeAuth: TOTP] Generate failed:', e);
         return 'ERROR';
     }
 }

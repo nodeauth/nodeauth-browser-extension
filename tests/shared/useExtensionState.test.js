@@ -161,14 +161,14 @@ describe('useExtensionState - Vault Actions', () => {
     }))
   })
 
-  it('Happy Path 6: activeTabUrl 匹配 GitHub 页面时，currentSiteAccounts 正确识别并自动激活 current_site 分类', async () => {
+  it('Happy Path 6: activeTabUrl 匹配 GitHub 页面时，currentSiteAccounts 正确识别并自动激活 suggestions 分类', async () => {
     const { activeTabUrl, currentSiteAccounts, selectedCategory, vaultList, fullVaultList } = state
     fullVaultList.value = [
       { id: '1', service: 'GitHub', account: 'git_user', category: 'work' },
       { id: '2', service: 'Google', account: 'google_user', category: 'personal' }
     ]
     activeTabUrl.value = 'https://github.com/login'
-    selectedCategory.value = 'current_site'
+    selectedCategory.value = 'suggestions'
 
     expect(currentSiteAccounts.value.length).toBe(1)
     expect(currentSiteAccounts.value[0].service).toBe('GitHub')

@@ -109,7 +109,7 @@ export async function decodeQrFromDataUrl(dataUrl) {
         code = jsQR(data, imageData.width, imageData.height)
         resolve(code && code.data ? code.data : null)
       } catch (e) {
-        console.error('[QRDecoder] Decode error:', e)
+        console.error('[NodeAuth: QRDecoder] Decode error:', e)
         resolve(null)
       }
     }

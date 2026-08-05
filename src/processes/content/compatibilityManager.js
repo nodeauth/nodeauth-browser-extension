@@ -119,7 +119,7 @@ export class CompatibilityManager {
       try {
         if (!!document.querySelector(selectors) && !ext.isIgnored(input)) return true
       } catch (e) {
-        console.warn(`[NodeAuth] Invalid selector for ${ext.name}: ${selectors}`, e)
+        console.warn(`[NodeAuth: Compatibility] Invalid selector for ${ext.name}: ${selectors}`, e)
       }
     }
     return false
