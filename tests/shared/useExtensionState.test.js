@@ -161,19 +161,19 @@ describe('useExtensionState - Vault Actions', () => {
     }))
   })
 
-  it('Happy Path 6: activeTabUrl 匹配 GitHub 页面时，currentSiteAccounts 正确识别并自动激活 suggestions 分类', async () => {
+  it('Happy Path 6: activeTabUrl 匹配 GitHub 页面时，currentSiteAccounts 正确识别，并且不再通过 suggestions 过滤 vaultList', async () => {
     const { activeTabUrl, currentSiteAccounts, selectedCategory, vaultList, fullVaultList } = state
     fullVaultList.value = [
       { id: '1', service: 'GitHub', account: 'git_user', category: 'work' },
       { id: '2', service: 'Google', account: 'google_user', category: 'personal' }
     ]
     activeTabUrl.value = 'https://github.com/login'
-    selectedCategory.value = 'suggestions'
+    selectedCategory.value = '' // 默认视图为全部
 
     expect(currentSiteAccounts.value.length).toBe(1)
     expect(currentSiteAccounts.value[0].service).toBe('GitHub')
-    expect(vaultList.value.length).toBe(1)
-    expect(vaultList.value[0].id).toBe('1')
+    // 由于重构了置顶逻辑，底层 vaultList 不再执行 suggestions 截断，而是返回全部内容交由视图层分段
+    expect(vaultList.value.length).toBe(2)
   })
 
   it('Edge Case 4: activeTabUrl 无匹配时，currentSiteAccounts 为空，选中全部时列表输出全量', async () => {

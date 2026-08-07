@@ -477,8 +477,6 @@ export function mountInlineIcon(input, accounts, isLocked = false) {
         menu.classList.remove('show')
         if (acc.code) {
           dispatchNativeInput(input, acc.code.replace(/\s+/g, ''))
-          // 验证码填入后隐藏图标，避免遮挡原生输入框的 UI（如密码显示切换按钮）
-          btn.style.display = 'none'
         }
       })
       menu.appendChild(item)

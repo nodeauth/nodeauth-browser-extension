@@ -9,6 +9,7 @@ const mockState = {
   vaultList: ref([]),
   categories: ref([]),
   selectedCategory: ref(''),
+  currentSiteAccounts: ref([]),
   totalItemsCount: ref(0),
   isLoadingVault: ref(false),
   searchQuery: ref(''),
@@ -72,6 +73,7 @@ describe('VaultList.vue Component', () => {
     vi.clearAllMocks()
     mockState.vaultList.value = []
     mockState.categories.value = []
+    mockState.currentSiteAccounts.value = []
     mockState.selectedCategory.value = ''
     mockState.searchQuery.value = ''
     mockState.isLoadingVault.value = false
@@ -98,6 +100,55 @@ describe('VaultList.vue Component', () => {
     const items = wrapper.findAll('.vault-item-stub')
     expect(items.length).toBe(2)
     expect(wrapper.text()).toContain('Service1')
+  })
+
+  it('列表分段渲染：自动匹配的账号应被前置到独立的 section', async () => {
+    mockState.vaultList.value = [
+      { id: '1', service: 'Google', account: 'test@gmail.com' },
+      { id: '2', service: 'Twitter', account: 'test@twitter.com' }
+    ]
+    mockState.currentSiteAccounts.value = [
+      { id: '1', service: 'Google', account: 'test@gmail.com' }
+    ]
+    
+    const wrapper = mount(VaultList, globalConfig)
+    
+    // 应该渲染两个 vault-section
+    const sections = wrapper.findAll('.vault-section')
+    expect(sections.length).toBe(2)
+    
+    // 第一个 section 应该是 自动匹配
+    expect(sections[0].find('.section-title').text()).toBe('vault.suggestions')
+    expect(sections[0].findAll('.vault-item-stub').length).toBe(1)
+    
+    // 第二个 section 应该是 其他所有账号 (去重后)
+    expect(sections[1].find('.section-title').text()).toBe('common.all')
+    expect(sections[1].findAll('.vault-item-stub').length).toBe(1)
+    expect(sections[1].text()).toContain('Twitter')
+    expect(sections[1].text()).not.toContain('Google')
+  })
+
+  it('搜索状态下：列表不分段，直接平铺展示', async () => {
+    mockState.vaultList.value = [
+      { id: '1', service: 'Google', account: 'test@gmail.com' },
+      { id: '2', service: 'Twitter', account: 'test@twitter.com' }
+    ]
+    mockState.currentSiteAccounts.value = [
+      { id: '1', service: 'Google', account: 'test@gmail.com' }
+    ]
+    mockState.searchQuery.value = 'twi' // 用户开始搜索
+    
+    const wrapper = mount(VaultList, globalConfig)
+    
+    // 不应有 vault-section
+    const sections = wrapper.findAll('.vault-section')
+    expect(sections.length).toBe(0)
+    
+    // 直接渲染平铺列表
+    const items = wrapper.findAll('.vault-item-stub')
+    // 模拟搜索过滤是 state 层面做的，组件拿到 vaultList 就是啥渲染啥
+    // 这里 vaultList 没手动过滤，所以渲染了 2 个，但结构上是直接在 .vault-list 下
+    expect(items.length).toBe(2) 
   })
 
   it('分类切换：点击分类应更新 selectedCategory', async () => {

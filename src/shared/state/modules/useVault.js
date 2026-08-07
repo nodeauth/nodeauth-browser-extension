@@ -53,9 +53,7 @@ export function useVault() {
         item.account.toLowerCase().includes(searchQuery.value.toLowerCase())
       
       let matchCategory = true
-      if (selectedCategory.value === 'suggestions') {
-        matchCategory = item.service && isServiceMatchDomain(item.service, activeTabUrl.value)
-      } else if (selectedCategory.value) {
+      if (selectedCategory.value) {
         matchCategory = item.category === selectedCategory.value
       }
       
@@ -116,9 +114,7 @@ export function useVault() {
         await chrome.storage.session.set({ 'sys:sec:vault_summary': vaultSummary })
       }
       await initActiveTabUrl()
-      if (currentSiteAccounts.value.length > 0 && (!selectedCategory.value || selectedCategory.value === 'suggestions')) {
-        selectedCategory.value = 'suggestions'
-      } else if (!selectedCategory.value) {
+      if (!selectedCategory.value) {
         selectedCategory.value = ''
       }
     } catch (e) {
