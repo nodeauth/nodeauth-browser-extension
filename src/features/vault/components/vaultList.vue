@@ -50,7 +50,7 @@
       <div 
         v-for="(section, index) in renderedSections" 
         :key="index"
-        :class="{ 'vault-section': section.title }"
+        class="vault-section"
       >
         <div v-if="section.title" class="section-title">{{ $t(section.title) }}</div>
         <VaultItem 
@@ -311,8 +311,8 @@ function handleExportCopy(content, type) {
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  padding: 4px 2px 4px 2px;
-  margin-bottom: 4px;
+  padding: 4px 2px 8px 2px;
+  margin-bottom: 8px;
   flex-shrink: 0;
   scrollbar-width: none; /* Firefox */
 }
@@ -372,12 +372,13 @@ function handleExportCopy(content, type) {
 .vault-section {
   display: flex;
   flex-direction: column;
+  gap: 12px;
 }
 .section-title {
   font-size: 12px;
   font-weight: 600;
   color: var(--text-muted);
-  margin: 8px 12px 4px 12px;
+  margin: 4px 12px 4px 12px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -395,7 +396,8 @@ function handleExportCopy(content, type) {
   gap: 12px;
   padding-bottom: 12px;
 }
-.vault-list.compact {
+.vault-list.compact,
+.vault-list.compact .vault-section {
   gap: 4px;
 }
 
